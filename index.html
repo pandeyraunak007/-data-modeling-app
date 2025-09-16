@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Modeling Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .page { display: none; }
+        .page.active { display: block; }
+        .ribbon-content { display: none; }
+        .ribbon-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Top Navigation -->
+    <nav class="bg-white border-b border-gray-200 px-6 py-3 sticky top-0 z-40">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white text-sm font-bold">DM</span>
+                </div>
+                <span class="text-xl font-semibold text-gray-900">Data Modeling Tool</span>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button class="relative p-2 text-gray-400 hover:text-gray-500 rounded-lg hover:bg-gray-100">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <span class="text-sm text-gray-600">Raunak P.</span>
+                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">RP</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex min-h-[calc(100vh-64px)]">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white border-r border-gray-200 sticky top-16 h-[calc(100vh-64px)]">
+            <nav class="p-4">
+                <ul class="space-y-1">
+                    <li>
+                        <button onclick="showPage('dashboard')" class="nav-item w-full flex items-center space-x-3 text-blue-600 bg-blue-50 p-3 rounded-lg font-medium text-left">
+                            <span class="material-symbols-outlined">dashboard</span>
+                            <span>Dashboard</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="showPage('workspace')" class="nav-item w-full flex items-center space-x-3 text-gray-700 p-3 rounded-lg hover:bg-gray-100 font-medium text-left">
+                            <span class="material-symbols-outlined">table_chart</span>
+                            <span>Model Workspace</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="showPage('designer')" class="nav-item w-full flex items-center space-x-3 text-gray-700 p-3 rounded-lg hover:bg-gray-100 font-medium text-left">
+                            <span class="material-symbols-outlined">palette</span>
+                            <span>Model Designer</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="showPage('governance')" class="nav-item w-full flex items-center space-x-3 text-gray-700 p-3 rounded-lg hover:bg-gray-100 font-medium text-left">
+                            <span class="material-symbols-outlined">security</span>
+                            <span>Governance</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1">
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page active">
+                <div class="bg-white border-b border-gray-200 px-6 py-4">
+                    <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
+                </div>
+
+                <div class="p-6">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-blue-100 rounded-lg">
+                                    <span class="material-symbols-outlined text-blue-600">table_chart</span>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-600">Total Models</p>
+                                    <p class="text-2xl font-bold text-gray-900">5</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-green-100 rounded-lg">
+                                    <span class="material-symbols-outlined text-green-600">cloud</span>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-600">Active Connections</p>
+                                    <p class="text-2xl font-bold text-gray-900">3</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-purple-100 rounded-lg">
+                                    <span class="material-symbols-outlined text-purple-600">category</span>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-600">Total Entities</p>
+                                    <p class="text-2xl font-bold text-gray-900">42</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-orange-100 rounded-lg">
+                                    <span class="material-symbols-outlined text-orange-600">link</span>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-600">Relationships</p>
+                                    <p class="text-2xl font-bold text-gray-900">18</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+                            <div class="p-6 border-b border-gray-100">
+                                <h2 class="text-xl font-semibold text-gray-900">Quick Actions</h2>
+                            </div>
+                            <div class="p-6 space-y-2">
+                                <button onclick="showPage('workspace')" class="w-full bg-gray-900 text-white p-3 rounded-lg hover:bg-gray-800 flex items-center justify-center">
+                                    <span class="material-symbols-outlined mr-2">add_box</span>
+                                    Create New Model
+                                </button>
+                                <button class="w-full bg-gray-100 text-gray-700 p-3 rounded-lg hover:bg-gray-200 flex items-center justify-center">
+                                    <span class="material-symbols-outlined mr-2">cloud</span>
+                                    Connect Database
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+                            <div class="p-6 border-b border-gray-100">
+                                <h2 class="text-xl font-semibold text-gray-900">Recent Models</h2>
+                            </div>
+                            <div class="p-6">
+                                <div class="space-y-3">
+                                    <div class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer">
+                                        <span class="material-symbols-outlined text-blue-600 mr-3">table_chart</span>
+                                        <div>
+                                            <p class="font-medium">E-commerce Model</p>
+                                            <p class="text-sm text-gray-500">Modified 2 hours ago</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer">
+                                        <span class="material-symbols-outlined text-green-600 mr-3">table_chart</span>
+                                        <div>
+                                            <p class="font-medium">Inventory System</p>
+                                            <p class="text-sm text-gray-500">Modified 1 day ago</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workspace Page -->
+            <div id="workspace" class="page">
+                <!-- Header -->
+                <div class="bg-white border-b border-gray-200">
+                    <div class="px-6 py-3 border-b border-gray-100">
+                        <div class="flex items-center space-x-4">
+                            <button onclick="showPage('dashboard')" class="flex items-center text-sm text-gray-600 hover:text-gray-800">
+                                <span class="material-symbols-outlined mr-1">arrow_back</span>
+                                Back to Dashboard
+                            </button>
+                            <div class="h-4 w-px bg-gray-300"></div>
+                            <div>
+                                <h1 class="text-lg font-semibold text-gray-900">E-commerce Model</h1>
+                                <p class="text-xs text-gray-500">Last modified 2 hours ago</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ribbon Tabs -->
+                    <div class="px-6">
+                        <div class="flex space-x-6">
+                            <button onclick="showRibbon('file')" class="ribbon-tab py-3 px-1 text-sm font-medium border-b-2 border-blue-500 text-blue-600">File</button>
+                            <button onclick="showRibbon('home')" class="ribbon-tab py-3 px-1 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">Home</button>
+                            <button onclick="showRibbon('diagram')" class="ribbon-tab py-3 px-1 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">Diagram</button>
+                            <button onclick="showRibbon('mart')" class="ribbon-tab py-3 px-1 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">Mart</button>
+                            <button onclick="showRibbon('actions')" class="ribbon-tab py-3 px-1 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">Actions</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ribbon Content -->
+                <div class="bg-gray-50 border-b border-gray-200 px-6 py-3">
+                    <div id="ribbon-file" class="ribbon-content active">
+                        <div class="flex space-x-1">
+                            <button class="flex flex-col items-center p-3 hover:bg-white rounded-lg">
+                                <span class="material-symbols-outlined text-lg mb-1">insert_drive_file</span>
+                                <span class="text-xs text-gray-700">New Model</span>
+                            </button>
+                            <button class="flex flex-col items-center p-3 hover:bg-white rounded-lg">
+                                <span class="material-symbols-outlined text-lg mb-1">save</span>
+                                <span class="text-xs text-gray-700">Save</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="ribbon-home" class="ribbon-content">
+                        <div class="flex space-x-1">
+                            <button class="flex flex-col items-center p-3 hover:bg-white rounded-lg">
+                                <span class="material-symbols-outlined text-lg mb-1">table_chart</span>
+                                <span class="text-xs text-gray-700">Add Entity</span>
+                            </button>
+                            <button class="flex flex-col items-center p-3 hover:bg-white rounded-lg">
+                                <span class="material-symbols-outlined text-lg mb-1">share</span>
+                                <span class="text-xs text-gray-700">Add Relationship</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="ribbon-diagram" class="ribbon-content">
+                        <div class="flex space-x-1">
+                            <button class="flex flex-col items-center p-3 hover:bg-white rounded-lg">
+                                <span class="material-symbols-outlined text-lg mb-1">add_box</span>
+                                <span class="text-xs text-gray-700">New Diagram</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="ribbon-mart" class="ribbon-content">
+                        <div class="flex space-x-1">
+                            <button class="flex flex-col items-center p-3 hover:bg-white rounded-lg">
+                                <span class="material-symbols-outlined text-lg mb-1">cloud</span>
+                                <span class="text-xs text-gray-700">Connect</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="ribbon-actions" class="ribbon-content">
+                        <div class="flex space-x-1">
+                            <button class="flex flex-col items-center p-3 hover:bg-white rounded-lg">
+                                <span class="material-symbols-outlined text-lg mb-1">compare_arrows</span>
+                                <span class="text-xs text-gray-700">Compare</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Three-column layout -->
+                <div class="flex h-[calc(100vh-240px)]">
+                    <!-- Left Panel -->
+                    <div class="w-64 bg-white border-r border-gray-200 p-4">
+                        <h3 class="text-sm font-semibold text-gray-900 mb-3">Model Navigator</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="font-medium text-gray-900 flex items-center">
+                                <span class="material-symbols-outlined mr-2 text-purple-600">table_chart</span>
+                                Tables (5)
+                            </div>
+                            <div class="ml-6 space-y-1 text-gray-600">
+                                <div class="hover:bg-gray-50 p-1 rounded cursor-pointer">Customers</div>
+                                <div class="hover:bg-gray-50 p-1 rounded cursor-pointer">Orders</div>
+                                <div class="hover:bg-gray-50 p-1 rounded cursor-pointer">Products</div>
+                                <div class="hover:bg-gray-50 p-1 rounded cursor-pointer">OrderItems</div>
+                                <div class="hover:bg-gray-50 p-1 rounded cursor-pointer">Categories</div>
+                            </div>
+                            <div class="font-medium text-gray-900 flex items-center mt-4">
+                                <span class="material-symbols-outlined mr-2 text-orange-600">link</span>
+                                Relationships (3)
+                            </div>
+                            <div class="ml-6 space-y-1 text-gray-600">
+                                <div class="hover:bg-gray-50 p-1 rounded cursor-pointer">Customer → Orders</div>
+                                <div class="hover:bg-gray-50 p-1 rounded cursor-pointer">Order → OrderItems</div>
+                                <div class="hover:bg-gray-50 p-1 rounded cursor-pointer">Product → OrderItems</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Center Canvas -->
+                    <div class="flex-1 bg-gray-50 relative">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center text-gray-500">
+                                <span class="material-symbols-outlined text-6xl mb-4 block">table_chart</span>
+                                <h3 class="text-lg font-medium mb-2">Data Model Workspace</h3>
+                                <p class="text-sm mb-6">Click the ribbon buttons above to add entities and relationships.</p>
+                                <button onclick="showFeedbackForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                    Give Feedback
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel -->
+                    <div class="w-80 bg-white border-l border-gray-200 p-4">
+                        <h3 class="text-sm font-semibold text-gray-900 mb-3">Properties</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm font-medium text-gray-700">Model Name</label>
+                                <input type="text" value="E-commerce Model" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-700">Database Type</label>
+                                <select class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    <option>MySQL</option>
+                                    <option>PostgreSQL</option>
+                                    <option>SQL Server</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Designer Page -->
+            <div id="designer" class="page">
+                <div class="bg-white border-b border-gray-200 px-6 py-4">
+                    <h1 class="text-2xl font-semibold text-gray-900">Model Designer</h1>
+                </div>
+                <div class="p-6">
+                    <div class="text-center text-gray-500 mt-20">
+                        <span class="material-symbols-outlined text-6xl mb-4 block">palette</span>
+                        <h3 class="text-lg font-medium mb-2">Model Designer</h3>
+                        <p class="text-sm">Advanced modeling features coming soon.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Governance Page -->
+            <div id="governance" class="page">
+                <div class="bg-white border-b border-gray-200 px-6 py-4">
+                    <h1 class="text-2xl font-semibold text-gray-900">Governance</h1>
+                </div>
+                <div class="p-6">
+                    <div class="text-center text-gray-500 mt-20">
+                        <span class="material-symbols-outlined text-6xl mb-4 block">security</span>
+                        <h3 class="text-lg font-medium mb-2">Governance</h3>
+                        <p class="text-sm">Data governance and compliance features coming soon.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 class="text-xl font-semibold mb-4">Share Your Feedback</h2>
+            <form id="feedbackForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                    <div class="flex space-x-1">
+                        <button type="button" onclick="setRating(1)" class="star text-2xl text-gray-300 hover:text-yellow-400">★</button>
+                        <button type="button" onclick="setRating(2)" class="star text-2xl text-gray-300 hover:text-yellow-400">★</button>
+                        <button type="button" onclick="setRating(3)" class="star text-2xl text-gray-300 hover:text-yellow-400">★</button>
+                        <button type="button" onclick="setRating(4)" class="star text-2xl text-gray-300 hover:text-yellow-400">★</button>
+                        <button type="button" onclick="setRating(5)" class="star text-2xl text-gray-300 hover:text-yellow-400">★</button>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Comments</label>
+                    <textarea id="feedbackText" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Tell us what you think..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email (optional)</label>
+                    <input type="email" id="feedbackEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="your@email.com">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeFeedbackForm()" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">Submit Feedback</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentRating = 0;
+
+        // Page navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('text-blue-600', 'bg-blue-50');
+                item.classList.add('text-gray-700');
+            });
+
+            event.target.classList.add('text-blue-600', 'bg-blue-50');
+            event.target.classList.remove('text-gray-700');
+        }
+
+        // Ribbon navigation
+        function showRibbon(ribbonId) {
+            document.querySelectorAll('.ribbon-content').forEach(content => content.classList.remove('active'));
+            document.getElementById('ribbon-' + ribbonId).classList.add('active');
+
+            document.querySelectorAll('.ribbon-tab').forEach(tab => {
+                tab.classList.remove('border-blue-500', 'text-blue-600');
+                tab.classList.add('border-transparent', 'text-gray-500');
+            });
+
+            event.target.classList.add('border-blue-500', 'text-blue-600');
+            event.target.classList.remove('border-transparent', 'text-gray-500');
+        }
+
+        // Feedback functions
+        function showFeedbackForm() {
+            document.getElementById('feedbackModal').classList.remove('hidden');
+            document.getElementById('feedbackModal').classList.add('flex');
+        }
+
+        function closeFeedbackForm() {
+            document.getElementById('feedbackModal').classList.add('hidden');
+            document.getElementById('feedbackModal').classList.remove('flex');
+        }
+
+        function setRating(rating) {
+            currentRating = rating;
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.remove('text-gray-300');
+                    star.classList.add('text-yellow-400');
+                } else {
+                    star.classList.add('text-gray-300');
+                    star.classList.remove('text-yellow-400');
+                }
+            });
+        }
+
+        // Handle feedback form submission
+        document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const feedback = {
+                rating: currentRating,
+                comments: document.getElementById('feedbackText').value,
+                email: document.getElementById('feedbackEmail').value,
+                timestamp: new Date().toISOString(),
+                page: document.querySelector('.page.active').id
+            };
+
+            // Store feedback locally for now
+            let feedbacks = JSON.parse(localStorage.getItem('feedbacks') || '[]');
+            feedbacks.push(feedback);
+            localStorage.setItem('feedbacks', JSON.stringify(feedbacks));
+
+            alert('Thank you for your feedback! It has been saved locally.');
+            closeFeedbackForm();
+
+            // Reset form
+            document.getElementById('feedbackForm').reset();
+            setRating(0);
+        });
+
+        console.log('Data Modeling Tool loaded successfully!');
+    </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "data-modeling-app",
+  "version": "1.0.0",
+  "description": "Professional data modeling and database design tool",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["data-modeling", "database-design", "erd"],
+  "author": "Raunak P.",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
