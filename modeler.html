@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erwin Cloud DM - Data Modeler</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .primary-tab.active {
+            background: white;
+            border-bottom: 3px solid #6366f1;
+            color: #6366f1;
+        }
+        .ribbon-option {
+            min-width: 80px;
+            text-align: center;
+        }
+        .entity-box {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            min-width: 180px;
+            cursor: move;
+            position: absolute;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .entity-box:hover {
+            border-color: #6366f1;
+            box-shadow: 0 4px 8px rgba(99, 102, 241, 0.2);
+        }
+        .entity-box.selected {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .canvas {
+            background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .docked-toolbar {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: absolute;
+            z-index: 100;
+            width: 48px;
+            user-select: none;
+            cursor: move;
+        }
+        .contextual-toolbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            position: absolute;
+            z-index: 200;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+        .contextual-toolbar.show {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+        .toolbar-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .toolbar-icon:hover {
+            background: #f3f4f6;
+            transform: scale(1.1);
+        }
+        .toolbar-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 4px 8px;
+        }
+        .tooltip {
+            position: absolute;
+            background: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .tree-item {
+            font-size: 13px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .tree-item:hover {
+            background: #f3f4f6;
+        }
+        .tree-item.selected {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+        .extreme-left-nav {
+            width: 60px;
+            background: #1f2937;
+        }
+        .model-explorer {
+            width: 280px;
+            background: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans overflow-hidden">
+    <!-- Row 1: Header (7% height) -->
+    <header class="h-[7vh] bg-white border-b border-gray-200 flex items-center px-6">
+        <!-- Left Section -->
+        <div class="flex items-center space-x-6">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">E</span>
+                </div>
+                <span class="text-lg font-semibold text-gray-900">Erwin Cloud DM</span>
+            </div>
+
+            <!-- Breadcrumb -->
+            <nav class="flex items-center text-sm text-gray-600">
+                <span>E-commerce Project</span>
+                <span class="mx-2">›</span>
+                <span>Customer Model</span>
+                <span class="mx-2">›</span>
+                <span class="text-indigo-600 font-medium">Main Diagram</span>
+            </nav>
+        </div>
+
+        <!-- Center Section -->
+        <div class="flex-1 flex justify-center">
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-600">View:</span>
+                    <button class="px-3 py-1 bg-indigo-600 text-white text-sm rounded">Logical</button>
+                    <button class="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded">Physical</button>
+                </div>
+                <div class="h-4 w-px bg-gray-300"></div>
+                <div class="flex items-center space-x-2">
+                    <span class="material-symbols-outlined text-sm text-gray-600">storage</span>
+                    <span class="text-sm text-gray-700">MS Fabric</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Section -->
+        <div class="flex items-center space-x-4">
+            <button class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                <span class="material-symbols-outlined">help</span>
+            </button>
+            <button class="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                <span class="material-symbols-outlined">notifications</span>
+                <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">2</span>
+            </button>
+            <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                RP
+            </div>
+        </div>
+    </header>
+
+    <!-- Row 2: Primary Tabs (4% height) -->
+    <div class="h-[4vh] bg-gray-100 border-b border-gray-200 flex items-end">
+        <div class="flex">
+            <button onclick="switchTab('file')" class="primary-tab active px-6 py-2 text-sm font-medium rounded-t-lg">File</button>
+            <button onclick="switchTab('home')" class="primary-tab px-6 py-2 text-sm font-medium rounded-t-lg text-gray-600 hover:text-gray-900">Home</button>
+            <button onclick="switchTab('diagram')" class="primary-tab px-6 py-2 text-sm font-medium rounded-t-lg text-gray-600 hover:text-gray-900">Diagram</button>
+            <button onclick="switchTab('view')" class="primary-tab px-6 py-2 text-sm font-medium rounded-t-lg text-gray-600 hover:text-gray-900">View</button>
+            <button onclick="switchTab('tools')" class="primary-tab px-6 py-2 text-sm font-medium rounded-t-lg text-gray-600 hover:text-gray-900">Tools</button>
+            <button onclick="switchTab('help')" class="primary-tab px-6 py-2 text-sm font-medium rounded-t-lg text-gray-600 hover:text-gray-900">Help</button>
+        </div>
+    </div>
+
+    <!-- Row 3: Secondary Ribbon (6% height) -->
+    <div class="h-[6vh] bg-white border-b border-gray-200 px-6 py-2">
+        <!-- File Ribbon -->
+        <div id="ribbon-file" class="ribbon-content flex items-center space-x-4 h-full">
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-lg mb-1">add</span>
+                    <span class="text-xs">New</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-lg mb-1">folder_open</span>
+                    <span class="text-xs">Open</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-lg mb-1">save</span>
+                    <span class="text-xs">Save</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-lg mb-1">save_as</span>
+                    <span class="text-xs">Save As</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-lg mb-1">upload</span>
+                    <span class="text-xs">Import</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-lg mb-1">download</span>
+                    <span class="text-xs">Export</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Home Ribbon -->
+        <div id="ribbon-home" class="ribbon-content hidden flex items-center space-x-4 h-full">
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-lg mb-1">table_chart</span>
+                    <span class="text-xs">Add Entity</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-lg mb-1">share</span>
+                    <span class="text-xs">Identifying Rel</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-lg mb-1">link</span>
+                    <span class="text-xs">Non-Identifying</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-lg mb-1">device_hub</span>
+                    <span class="text-xs">Many-to-Many</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-lg mb-1">hierarchy</span>
+                    <span class="text-xs">Supertype</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-lg mb-1">note_add</span>
+                    <span class="text-xs">Annotation</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Other ribbons -->
+        <div id="ribbon-diagram" class="ribbon-content hidden">Diagram tools...</div>
+        <div id="ribbon-view" class="ribbon-content hidden">View options...</div>
+        <div id="ribbon-tools" class="ribbon-content hidden">Tools options...</div>
+        <div id="ribbon-help" class="ribbon-content hidden">Help options...</div>
+    </div>
+
+    <!-- Row 4: Main Workspace (83% height) -->
+    <div class="h-[83vh] flex">
+        <!-- Column 1: Left Navigation (20% width) -->
+        <div class="w-[20%] flex">
+            <!-- Extreme Left Vertical Menu -->
+            <div class="extreme-left-nav flex flex-col items-center py-4 space-y-4">
+                <a href="index.html" class="p-3 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg">
+                    <span class="material-symbols-outlined">dashboard</span>
+                </a>
+                <button class="p-3 text-white bg-gray-700 rounded-lg">
+                    <span class="material-symbols-outlined">table_chart</span>
+                </button>
+                <button class="p-3 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg">
+                    <span class="material-symbols-outlined">cloud_download</span>
+                </button>
+                <button class="p-3 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg">
+                    <span class="material-symbols-outlined">compare_arrows</span>
+                </button>
+                <a href="users.html" class="p-3 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg">
+                    <span class="material-symbols-outlined">group</span>
+                </a>
+                <a href="settings.html" class="p-3 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg">
+                    <span class="material-symbols-outlined">settings</span>
+                </a>
+            </div>
+
+            <!-- Model Explorer -->
+            <div class="model-explorer border-r border-gray-200 flex flex-col">
+                <div class="p-3 border-b border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-gray-900">Model Explorer</h3>
+                        <button class="text-gray-400 hover:text-gray-600">
+                            <span class="material-symbols-outlined text-sm">collapse_content</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-2">
+                    <div class="space-y-1">
+                        <!-- Model Root -->
+                        <div class="tree-item flex items-center">
+                            <span class="material-symbols-outlined text-sm mr-2">folder</span>
+                            <span class="font-medium">E-commerce Model</span>
+                            <button class="ml-auto text-gray-400 hover:text-gray-600">
+                                <span class="material-symbols-outlined text-xs">more_vert</span>
+                            </button>
+                        </div>
+
+                        <!-- Diagrams -->
+                        <div class="ml-4">
+                            <div class="tree-item flex items-center">
+                                <span class="material-symbols-outlined text-sm mr-2">expand_more</span>
+                                <span class="material-symbols-outlined text-sm mr-2">schema</span>
+                                <span>Diagrams (2)</span>
+                            </div>
+                            <div class="ml-6 space-y-1">
+                                <div class="tree-item selected flex items-center">
+                                    <span class="material-symbols-outlined text-sm mr-2">article</span>
+                                    <span>Main Diagram</span>
+                                </div>
+                                <div class="tree-item flex items-center">
+                                    <span class="material-symbols-outlined text-sm mr-2">article</span>
+                                    <span>User Management</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Entities -->
+                        <div class="ml-4">
+                            <div class="tree-item flex items-center">
+                                <span class="material-symbols-outlined text-sm mr-2">expand_more</span>
+                                <span class="material-symbols-outlined text-sm mr-2">table_chart</span>
+                                <span>Entities (5)</span>
+                            </div>
+                            <div class="ml-6 space-y-1">
+                                <div class="tree-item flex items-center">
+                                    <span class="material-symbols-outlined text-sm mr-2">table_chart</span>
+                                    <span>Customer</span>
+                                    <button class="ml-auto text-gray-400 hover:text-gray-600">
+                                        <span class="material-symbols-outlined text-xs">more_vert</span>
+                                    </button>
+                                </div>
+                                <div class="tree-item flex items-center">
+                                    <span class="material-symbols-outlined text-sm mr-2">table_chart</span>
+                                    <span>Order</span>
+                                    <button class="ml-auto text-gray-400 hover:text-gray-600">
+                                        <span class="material-symbols-outlined text-xs">more_vert</span>
+                                    </button>
+                                </div>
+                                <div class="tree-item flex items-center">
+                                    <span class="material-symbols-outlined text-sm mr-2">table_chart</span>
+                                    <span>Product</span>
+                                    <button class="ml-auto text-gray-400 hover:text-gray-600">
+                                        <span class="material-symbols-outlined text-xs">more_vert</span>
+                                    </button>
+                                </div>
+                                <div class="tree-item flex items-center">
+                                    <span class="material-symbols-outlined text-sm mr-2">table_chart</span>
+                                    <span>OrderItem</span>
+                                    <button class="ml-auto text-gray-400 hover:text-gray-600">
+                                        <span class="material-symbols-outlined text-xs">more_vert</span>
+                                    </button>
+                                </div>
+                                <div class="tree-item flex items-center">
+                                    <span class="material-symbols-outlined text-sm mr-2">table_chart</span>
+                                    <span>Category</span>
+                                    <button class="ml-auto text-gray-400 hover:text-gray-600">
+                                        <span class="material-symbols-outlined text-xs">more_vert</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Relationships -->
+                        <div class="ml-4">
+                            <div class="tree-item flex items-center">
+                                <span class="material-symbols-outlined text-sm mr-2">expand_more</span>
+                                <span class="material-symbols-outlined text-sm mr-2">share</span>
+                                <span>Relationships (4)</span>
+                            </div>
+                            <div class="ml-6 space-y-1">
+                                <div class="tree-item flex items-center">
+                                    <span class="material-symbols-outlined text-sm mr-2">share</span>
+                                    <span>Customer-Order</span>
+                                </div>
+                                <div class="tree-item flex items-center">
+                                    <span class="material-symbols-outlined text-sm mr-2">share</span>
+                                    <span>Order-OrderItem</span>
+                                </div>
+                                <div class="tree-item flex items-center">
+                                    <span class="material-symbols-outlined text-sm mr-2">share</span>
+                                    <span>Product-OrderItem</span>
+                                </div>
+                                <div class="tree-item flex items-center">
+                                    <span class="material-symbols-outlined text-sm mr-2">share</span>
+                                    <span>Category-Product</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Other sections collapsed -->
+                        <div class="ml-4 space-y-1">
+                            <div class="tree-item flex items-center">
+                                <span class="material-symbols-outlined text-sm mr-2">chevron_right</span>
+                                <span class="material-symbols-outlined text-sm mr-2">key</span>
+                                <span>Keys</span>
+                            </div>
+                            <div class="tree-item flex items-center">
+                                <span class="material-symbols-outlined text-sm mr-2">chevron_right</span>
+                                <span class="material-symbols-outlined text-sm mr-2">visibility</span>
+                                <span>Views</span>
+                            </div>
+                            <div class="tree-item flex items-center">
+                                <span class="material-symbols-outlined text-sm mr-2">chevron_right</span>
+                                <span class="material-symbols-outlined text-sm mr-2">data_object</span>
+                                <span>Domains</span>
+                            </div>
+                            <div class="tree-item flex items-center">
+                                <span class="material-symbols-outlined text-sm mr-2">chevron_right</span>
+                                <span class="material-symbols-outlined text-sm mr-2">rule</span>
+                                <span>Business Rules</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 2: Center Diagram Canvas (55% width) -->
+        <div class="w-[55%] flex flex-col">
+            <!-- Multi-Model Tabs -->
+            <div class="bg-gray-100 border-b border-gray-200 px-4 py-2">
+                <div class="flex space-x-1">
+                    <button class="px-4 py-1 bg-white border border-gray-300 rounded-t text-sm font-medium">E-commerce Model</button>
+                    <button class="px-4 py-1 text-gray-600 hover:bg-gray-200 rounded-t text-sm">+ New Model</button>
+                </div>
+            </div>
+
+            <!-- Diagram Canvas -->
+            <div class="flex-1 canvas bg-gray-100 relative" id="diagramCanvas">
+                <!-- Sample Entities -->
+                <div class="entity-box" style="top: 80px; left: 80px;" onclick="selectEntity(this)">
+                    <div class="bg-blue-600 text-white px-3 py-2 font-semibold text-sm flex items-center">
+                        <span class="material-symbols-outlined mr-2 text-sm">table_chart</span>
+                        Customer
+                    </div>
+                    <div class="p-3">
+                        <div class="space-y-1 text-xs">
+                            <div class="flex items-center">
+                                <span class="material-symbols-outlined mr-2 text-xs text-yellow-600">key</span>
+                                <span class="font-medium">customer_id</span>
+                                <span class="text-gray-500 ml-auto">INT</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-4 mr-2"></span>
+                                <span>first_name</span>
+                                <span class="text-gray-500 ml-auto">VARCHAR(50)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-4 mr-2"></span>
+                                <span>last_name</span>
+                                <span class="text-gray-500 ml-auto">VARCHAR(50)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-4 mr-2"></span>
+                                <span>email</span>
+                                <span class="text-gray-500 ml-auto">VARCHAR(100)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-4 mr-2"></span>
+                                <span>created_date</span>
+                                <span class="text-gray-500 ml-auto">DATETIME</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="entity-box" style="top: 80px; left: 350px;" onclick="selectEntity(this)">
+                    <div class="bg-green-600 text-white px-3 py-2 font-semibold text-sm flex items-center">
+                        <span class="material-symbols-outlined mr-2 text-sm">table_chart</span>
+                        Order
+                    </div>
+                    <div class="p-3">
+                        <div class="space-y-1 text-xs">
+                            <div class="flex items-center">
+                                <span class="material-symbols-outlined mr-2 text-xs text-yellow-600">key</span>
+                                <span class="font-medium">order_id</span>
+                                <span class="text-gray-500 ml-auto">INT</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="material-symbols-outlined mr-2 text-xs text-blue-600">link</span>
+                                <span>customer_id</span>
+                                <span class="text-gray-500 ml-auto">INT</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-4 mr-2"></span>
+                                <span>order_date</span>
+                                <span class="text-gray-500 ml-auto">DATETIME</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-4 mr-2"></span>
+                                <span>total_amount</span>
+                                <span class="text-gray-500 ml-auto">DECIMAL(10,2)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="entity-box" style="top: 280px; left: 200px;" onclick="selectEntity(this)">
+                    <div class="bg-purple-600 text-white px-3 py-2 font-semibold text-sm flex items-center">
+                        <span class="material-symbols-outlined mr-2 text-sm">table_chart</span>
+                        Product
+                    </div>
+                    <div class="p-3">
+                        <div class="space-y-1 text-xs">
+                            <div class="flex items-center">
+                                <span class="material-symbols-outlined mr-2 text-xs text-yellow-600">key</span>
+                                <span class="font-medium">product_id</span>
+                                <span class="text-gray-500 ml-auto">INT</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-4 mr-2"></span>
+                                <span>product_name</span>
+                                <span class="text-gray-500 ml-auto">VARCHAR(100)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-4 mr-2"></span>
+                                <span>price</span>
+                                <span class="text-gray-500 ml-auto">DECIMAL(10,2)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Docked Floating Toolbar (Left Side) -->
+                <div id="dockedToolbar" class="docked-toolbar" style="top: 20px; left: 20px;">
+                    <div class="p-2">
+                        <!-- Entities & Relationships -->
+                        <div class="toolbar-icon" data-tooltip="Add Entity (Ctrl+E)" onclick="addEntity()">
+                            <span class="material-symbols-outlined text-base">add_box</span>
+                        </div>
+                        <div class="toolbar-icon" data-tooltip="Supertype/Subtype" onclick="addSupertype()">
+                            <span class="material-symbols-outlined text-base">account_tree</span>
+                        </div>
+                        <div class="toolbar-icon" data-tooltip="Identifying Relationship" onclick="addIdentifyingRel()">
+                            <span class="material-symbols-outlined text-base">link</span>
+                        </div>
+                        <div class="toolbar-icon" data-tooltip="Non-Identifying Relationship" onclick="addNonIdentifyingRel()">
+                            <span class="material-symbols-outlined text-base">trending_flat</span>
+                        </div>
+                        <div class="toolbar-icon" data-tooltip="Many-to-Many Relationship" onclick="addManyToMany()">
+                            <span class="material-symbols-outlined text-base">device_hub</span>
+                        </div>
+
+                        <div class="toolbar-divider"></div>
+
+                        <!-- Visual / Annotation Tools -->
+                        <div class="toolbar-icon" data-tooltip="Add Annotation" onclick="addAnnotation()">
+                            <span class="material-symbols-outlined text-base">note_add</span>
+                        </div>
+                        <div class="toolbar-icon" data-tooltip="Drawing Objects" onclick="addDrawingObject()">
+                            <span class="material-symbols-outlined text-base">draw</span>
+                        </div>
+                        <div class="toolbar-icon" data-tooltip="Style Tools" onclick="openStyleTools()">
+                            <span class="material-symbols-outlined text-base">palette</span>
+                        </div>
+
+                        <div class="toolbar-divider"></div>
+
+                        <!-- Diagram Navigation -->
+                        <div class="toolbar-icon" data-tooltip="Zoom In (Ctrl++)" onclick="zoomIn()">
+                            <span class="material-symbols-outlined text-base">zoom_in</span>
+                        </div>
+                        <div class="toolbar-icon" data-tooltip="Zoom Out (Ctrl+-)" onclick="zoomOut()">
+                            <span class="material-symbols-outlined text-base">zoom_out</span>
+                        </div>
+                        <div class="toolbar-icon" data-tooltip="Fit to Screen (Ctrl+0)" onclick="fitToScreen()">
+                            <span class="material-symbols-outlined text-base">fit_screen</span>
+                        </div>
+                        <div class="toolbar-icon" data-tooltip="Pan Tool" onclick="enablePan()">
+                            <span class="material-symbols-outlined text-base">pan_tool</span>
+                        </div>
+
+                        <div class="toolbar-divider"></div>
+
+                        <!-- Alignment & Layout -->
+                        <div class="toolbar-icon" data-tooltip="Align Objects" onclick="showAlignMenu()">
+                            <span class="material-symbols-outlined text-base">format_align_center</span>
+                        </div>
+                        <div class="toolbar-icon" data-tooltip="Distribute Objects" onclick="showDistributeMenu()">
+                            <span class="material-symbols-outlined text-base">space_bar</span>
+                        </div>
+                        <div class="toolbar-icon" data-tooltip="Group Objects (Ctrl+G)" onclick="groupObjects()">
+                            <span class="material-symbols-outlined text-base">group_work</span>
+                        </div>
+                        <div class="toolbar-icon" data-tooltip="Auto Layout" onclick="autoLayout()">
+                            <span class="material-symbols-outlined text-base">auto_awesome</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contextual Mini-Toolbar -->
+                <div id="contextualToolbar" class="contextual-toolbar">
+                    <div class="flex items-center p-2 space-x-1" id="contextualToolbarContent">
+                        <!-- Content dynamically populated based on selection -->
+                    </div>
+                </div>
+
+                <!-- Tooltip -->
+                <div id="tooltip" class="tooltip"></div>
+
+                <!-- Connection Lines -->
+                <svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 1;">
+                    <line x1="260" y1="140" x2="350" y2="140" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead)"/>
+                    <text x="305" y="135" fill="#6366f1" font-size="11" text-anchor="middle">1:N</text>
+
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+
+            <!-- Diagram Tabs -->
+            <div class="bg-gray-100 border-t border-gray-200 px-4 py-2">
+                <div class="flex space-x-1">
+                    <button class="px-3 py-1 bg-white border border-gray-300 rounded text-xs font-medium">Main Diagram</button>
+                    <button class="px-3 py-1 text-gray-600 hover:bg-gray-200 rounded text-xs">User Management</button>
+                    <button class="px-3 py-1 text-gray-600 hover:bg-gray-200 rounded text-xs">+ New Diagram</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 3: Right Properties Pane (25% width) -->
+        <div class="w-[25%] bg-white border-l border-gray-200 flex flex-col">
+            <div class="p-4 border-b border-gray-200">
+                <h3 class="font-semibold text-gray-900">Properties</h3>
+                <p class="text-xs text-gray-500 mt-1">Entity: Customer</p>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4">
+                <div class="space-y-6">
+                    <!-- Entity Properties -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-3">Entity Properties</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Name</label>
+                                <input type="text" value="Customer" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Type</label>
+                                <select class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                                    <option>Entity</option>
+                                    <option>Associative</option>
+                                    <option>Supertype</option>
+                                    <option>Subtype</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Schema</label>
+                                <input type="text" value="dbo" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attributes -->
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-medium text-gray-900">Attributes</h4>
+                            <button class="text-indigo-600 hover:text-indigo-700 text-xs">+ Add</button>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="border border-gray-200 rounded p-2">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-medium text-xs">customer_id</span>
+                                    <div class="flex items-center space-x-1">
+                                        <span class="material-symbols-outlined text-yellow-600 text-xs">key</span>
+                                        <button class="text-gray-400 hover:text-red-600">
+                                            <span class="material-symbols-outlined text-xs">delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-500">INT • Primary Key • Not Null</div>
+                            </div>
+
+                            <div class="border border-gray-200 rounded p-2">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-medium text-xs">first_name</span>
+                                    <button class="text-gray-400 hover:text-red-600">
+                                        <span class="material-symbols-outlined text-xs">delete</span>
+                                    </button>
+                                </div>
+                                <div class="text-xs text-gray-500">VARCHAR(50) • Not Null</div>
+                            </div>
+
+                            <div class="border border-gray-200 rounded p-2">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-medium text-xs">email</span>
+                                    <button class="text-gray-400 hover:text-red-600">
+                                        <span class="material-symbols-outlined text-xs">delete</span>
+                                    </button>
+                                </div>
+                                <div class="text-xs text-gray-500">VARCHAR(100) • Unique</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Appearance -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-3">Appearance</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Header Color</label>
+                                <div class="flex space-x-2">
+                                    <div class="w-6 h-6 bg-blue-600 rounded cursor-pointer border-2 border-blue-600"></div>
+                                    <div class="w-6 h-6 bg-green-600 rounded cursor-pointer border-2 border-transparent hover:border-gray-300"></div>
+                                    <div class="w-6 h-6 bg-purple-600 rounded cursor-pointer border-2 border-transparent hover:border-gray-300"></div>
+                                    <div class="w-6 h-6 bg-red-600 rounded cursor-pointer border-2 border-transparent hover:border-gray-300"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="showDataTypes" class="mr-2">
+                                <label for="showDataTypes" class="text-xs text-gray-700">Show Data Types</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="showKeys" class="mr-2" checked>
+                                <label for="showKeys" class="text-xs text-gray-700">Show Key Icons</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedEntity = null;
+        let selectedEntities = [];
+        let isDragging = false;
+        let isToolbarDragging = false;
+        let currentMode = 'select'; // select, pan, etc.
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.primary-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.ribbon-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById('ribbon-' + tabName).classList.remove('hidden');
+        }
+
+        // Entity interaction
+        function selectEntity(entity) {
+            document.querySelectorAll('.entity-box').forEach(e => {
+                e.classList.remove('selected');
+            });
+            entity.classList.add('selected');
+            selectedEntity = entity;
+            selectedEntities = [entity];
+
+            // Update properties panel
+            const entityName = entity.querySelector('.bg-blue-600, .bg-green-600, .bg-purple-600').textContent.trim();
+            document.querySelector('.properties p').textContent = `Entity: ${entityName}`;
+
+            // Show contextual toolbar
+            showContextualToolbar(entity, 'entity');
+        }
+
+        // Contextual Toolbar Functions
+        function showContextualToolbar(element, type) {
+            const toolbar = document.getElementById('contextualToolbar');
+            const content = document.getElementById('contextualToolbarContent');
+
+            // Clear existing content
+            content.innerHTML = '';
+
+            // Position near the selected element
+            const rect = element.getBoundingClientRect();
+            const canvasRect = document.getElementById('diagramCanvas').getBoundingClientRect();
+
+            const x = rect.right - canvasRect.left + 10;
+            const y = rect.top - canvasRect.top;
+
+            toolbar.style.left = x + 'px';
+            toolbar.style.top = y + 'px';
+
+            // Add context-specific buttons
+            if (type === 'entity') {
+                content.innerHTML = `
+                    <button class="toolbar-icon" onclick="renameEntity()" title="Rename">
+                        <span class="material-symbols-outlined text-sm">edit</span>
+                    </button>
+                    <button class="toolbar-icon" onclick="addAttribute()" title="Add Attribute">
+                        <span class="material-symbols-outlined text-sm">add</span>
+                    </button>
+                    <button class="toolbar-icon" onclick="changeEntityStyle()" title="Change Style">
+                        <span class="material-symbols-outlined text-sm">palette</span>
+                    </button>
+                    <button class="toolbar-icon" onclick="deleteEntity()" title="Delete">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                    <button class="toolbar-icon" onclick="viewEntityProperties()" title="Properties">
+                        <span class="material-symbols-outlined text-sm">settings</span>
+                    </button>
+                `;
+            } else if (type === 'relationship') {
+                content.innerHTML = `
+                    <button class="toolbar-icon" onclick="editRelationship()" title="Edit Properties">
+                        <span class="material-symbols-outlined text-sm">edit</span>
+                    </button>
+                    <button class="toolbar-icon" onclick="toggleRelationshipType()" title="Toggle Type">
+                        <span class="material-symbols-outlined text-sm">swap_horiz</span>
+                    </button>
+                    <button class="toolbar-icon" onclick="deleteRelationship()" title="Delete">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                `;
+            }
+
+            // Show toolbar with animation
+            toolbar.classList.add('show');
+        }
+
+        function hideContextualToolbar() {
+            const toolbar = document.getElementById('contextualToolbar');
+            toolbar.classList.remove('show');
+        }
+
+        // Tooltip system
+        function showTooltip(element, text) {
+            const tooltip = document.getElementById('tooltip');
+            const rect = element.getBoundingClientRect();
+
+            tooltip.textContent = text;
+            tooltip.style.left = (rect.right + 8) + 'px';
+            tooltip.style.top = (rect.top + rect.height / 2 - 10) + 'px';
+            tooltip.style.opacity = '1';
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.opacity = '0';
+        }
+
+        // Toolbar Functions
+        function addEntity() {
+            alert('Add Entity: Create new entity at cursor position');
+        }
+
+        function addSupertype() {
+            alert('Add Supertype/Subtype: Create inheritance relationship');
+        }
+
+        function addIdentifyingRel() {
+            alert('Add Identifying Relationship: Strong relationship with foreign key in primary key');
+        }
+
+        function addNonIdentifyingRel() {
+            alert('Add Non-Identifying Relationship: Weak relationship with foreign key not in primary key');
+        }
+
+        function addManyToMany() {
+            alert('Add Many-to-Many Relationship: Create associative entity with relationships');
+        }
+
+        function addAnnotation() {
+            alert('Add Annotation: Place text annotation on diagram');
+        }
+
+        function addDrawingObject() {
+            alert('Add Drawing Object: Add rectangle, ellipse, or line');
+        }
+
+        function openStyleTools() {
+            alert('Style Tools: Change colors, fonts, and borders');
+        }
+
+        function zoomIn() {
+            alert('Zoom In: Increase diagram zoom level');
+        }
+
+        function zoomOut() {
+            alert('Zoom Out: Decrease diagram zoom level');
+        }
+
+        function fitToScreen() {
+            alert('Fit to Screen: Adjust zoom to show all objects');
+        }
+
+        function enablePan() {
+            currentMode = currentMode === 'pan' ? 'select' : 'pan';
+            alert('Pan Mode: ' + (currentMode === 'pan' ? 'Enabled' : 'Disabled'));
+        }
+
+        function showAlignMenu() {
+            alert('Align Objects: Left, Right, Top, Bottom alignment options');
+        }
+
+        function showDistributeMenu() {
+            alert('Distribute Objects: Horizontal and vertical distribution');
+        }
+
+        function groupObjects() {
+            if (selectedEntities.length > 1) {
+                alert('Group Objects: Group ' + selectedEntities.length + ' selected objects');
+            } else {
+                alert('Group Objects: Select multiple objects first');
+            }
+        }
+
+        function autoLayout() {
+            alert('Auto Layout: Automatically arrange entities and relationships');
+        }
+
+        // Contextual toolbar functions
+        function renameEntity() {
+            const newName = prompt('Enter new entity name:', selectedEntity.querySelector('.font-semibold').textContent);
+            if (newName) {
+                selectedEntity.querySelector('.font-semibold').textContent = newName;
+            }
+        }
+
+        function addAttribute() {
+            alert('Add Attribute: Open attribute editor dialog');
+        }
+
+        function changeEntityStyle() {
+            alert('Change Style: Open style editor for entity appearance');
+        }
+
+        function deleteEntity() {
+            if (confirm('Delete this entity?')) {
+                selectedEntity.remove();
+                hideContextualToolbar();
+                selectedEntity = null;
+                selectedEntities = [];
+            }
+        }
+
+        function viewEntityProperties() {
+            alert('Entity Properties: Open detailed properties panel');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey) {
+                switch(e.key) {
+                    case 'e':
+                        e.preventDefault();
+                        addEntity();
+                        break;
+                    case 'g':
+                        e.preventDefault();
+                        groupObjects();
+                        break;
+                    case '=':
+                    case '+':
+                        e.preventDefault();
+                        zoomIn();
+                        break;
+                    case '-':
+                        e.preventDefault();
+                        zoomOut();
+                        break;
+                    case '0':
+                        e.preventDefault();
+                        fitToScreen();
+                        break;
+                }
+            }
+        });
+
+        // Dragging functionality for entities
+        document.addEventListener('mousedown', function(e) {
+            if (e.target.closest('.entity-box')) {
+                isDragging = true;
+                selectedEntity = e.target.closest('.entity-box');
+                selectEntity(selectedEntity);
+
+                const rect = selectedEntity.getBoundingClientRect();
+                const canvasRect = document.getElementById('diagramCanvas').getBoundingClientRect();
+
+                const offsetX = e.clientX - rect.left;
+                const offsetY = e.clientY - rect.top;
+
+                function onMouseMove(e) {
+                    if (isDragging && selectedEntity) {
+                        const newX = e.clientX - canvasRect.left - offsetX;
+                        const newY = e.clientY - canvasRect.top - offsetY;
+
+                        selectedEntity.style.left = Math.max(0, newX) + 'px';
+                        selectedEntity.style.top = Math.max(0, newY) + 'px';
+
+                        hideContextualToolbar();
+                    }
+                }
+
+                function onMouseUp() {
+                    isDragging = false;
+                    if (selectedEntity) {
+                        showContextualToolbar(selectedEntity, 'entity');
+                    }
+                    selectedEntity = null;
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            } else if (e.target.closest('#dockedToolbar')) {
+                // Toolbar dragging
+                isToolbarDragging = true;
+                const toolbar = document.getElementById('dockedToolbar');
+                const rect = toolbar.getBoundingClientRect();
+                const canvasRect = document.getElementById('diagramCanvas').getBoundingClientRect();
+
+                const offsetX = e.clientX - rect.left;
+                const offsetY = e.clientY - rect.top;
+
+                function onToolbarMove(e) {
+                    if (isToolbarDragging) {
+                        const newX = e.clientX - canvasRect.left - offsetX;
+                        const newY = e.clientY - canvasRect.top - offsetY;
+
+                        toolbar.style.left = Math.max(0, newX) + 'px';
+                        toolbar.style.top = Math.max(0, newY) + 'px';
+                    }
+                }
+
+                function onToolbarUp() {
+                    isToolbarDragging = false;
+                    document.removeEventListener('mousemove', onToolbarMove);
+                    document.removeEventListener('mouseup', onToolbarUp);
+                }
+
+                document.addEventListener('mousemove', onToolbarMove);
+                document.addEventListener('mouseup', onToolbarUp);
+            } else {
+                // Click on canvas - hide contextual toolbar
+                hideContextualToolbar();
+                selectedEntity = null;
+                selectedEntities = [];
+                document.querySelectorAll('.entity-box').forEach(e => {
+                    e.classList.remove('selected');
+                });
+            }
+        });
+
+        // Tooltip events
+        document.addEventListener('mouseover', function(e) {
+            const toolbarIcon = e.target.closest('.toolbar-icon');
+            if (toolbarIcon && toolbarIcon.dataset.tooltip) {
+                showTooltip(toolbarIcon, toolbarIcon.dataset.tooltip);
+            }
+        });
+
+        document.addEventListener('mouseout', function(e) {
+            const toolbarIcon = e.target.closest('.toolbar-icon');
+            if (toolbarIcon) {
+                hideTooltip();
+            }
+        });
+
+        console.log('Erwin Cloud DM - Data Modeler loaded successfully!');
+        console.log('Features: Docked toolbar, contextual toolbar, keyboard shortcuts, tooltips');
+    </script>
+</body>
+</html>
