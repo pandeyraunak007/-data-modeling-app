@@ -16,7 +16,7 @@
             color: #6366f1;
         }
         .ribbon-option {
-            min-width: 80px;
+            min-width: 45px;
             text-align: center;
         }
         .entity-box {
@@ -115,11 +115,11 @@
         }
         .extreme-left-nav {
             width: 60px;
-            background: #1f2937;
+            background: #f9fafb;
         }
         .model-explorer {
             width: 280px;
-            background: white;
+            background: #f9fafb;
         }
     </style>
 </head>
@@ -176,15 +176,33 @@
         </div>
     </header>
 
-    <!-- Row 2: Primary Tabs (4% height) -->
-    <div class="h-[4vh] bg-gray-100 border-b border-gray-200 flex items-end">
+    <!-- Row 2: Primary Tabs (6% height) -->
+    <div class="h-[6vh] bg-gray-100 border-b border-gray-200 flex items-end">
         <div class="flex">
-            <button onclick="switchTab('file')" class="primary-tab active px-6 py-2 text-sm font-medium rounded-t-lg">File</button>
-            <button onclick="switchTab('home')" class="primary-tab px-6 py-2 text-sm font-medium rounded-t-lg text-gray-600 hover:text-gray-900">Home</button>
-            <button onclick="switchTab('diagram')" class="primary-tab px-6 py-2 text-sm font-medium rounded-t-lg text-gray-600 hover:text-gray-900">Diagram</button>
-            <button onclick="switchTab('view')" class="primary-tab px-6 py-2 text-sm font-medium rounded-t-lg text-gray-600 hover:text-gray-900">View</button>
-            <button onclick="switchTab('tools')" class="primary-tab px-6 py-2 text-sm font-medium rounded-t-lg text-gray-600 hover:text-gray-900">Tools</button>
-            <button onclick="switchTab('help')" class="primary-tab px-6 py-2 text-sm font-medium rounded-t-lg text-gray-600 hover:text-gray-900">Help</button>
+            <button onclick="switchTab('file')" class="primary-tab active px-4 py-2 text-xs font-medium rounded-t-lg flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">folder</span>
+                <span>File</span>
+            </button>
+            <button onclick="switchTab('home')" class="primary-tab px-4 py-2 text-xs font-medium rounded-t-lg text-gray-600 hover:text-gray-900 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">home</span>
+                <span>Home</span>
+            </button>
+            <button onclick="switchTab('diagram')" class="primary-tab px-4 py-2 text-xs font-medium rounded-t-lg text-gray-600 hover:text-gray-900 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">schema</span>
+                <span>Diagram</span>
+            </button>
+            <button onclick="switchTab('view')" class="primary-tab px-4 py-2 text-xs font-medium rounded-t-lg text-gray-600 hover:text-gray-900 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">visibility</span>
+                <span>View</span>
+            </button>
+            <button onclick="switchTab('tools')" class="primary-tab px-4 py-2 text-xs font-medium rounded-t-lg text-gray-600 hover:text-gray-900 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">build</span>
+                <span>Tools</span>
+            </button>
+            <button onclick="switchTab('help')" class="primary-tab px-4 py-2 text-xs font-medium rounded-t-lg text-gray-600 hover:text-gray-900 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">help</span>
+                <span>Help</span>
+            </button>
         </div>
     </div>
 
@@ -193,32 +211,32 @@
         <!-- File Ribbon -->
         <div id="ribbon-file" class="ribbon-content flex items-center space-x-4 h-full">
             <div class="flex items-center space-x-2">
-                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
-                    <span class="material-symbols-outlined text-lg mb-1">add</span>
-                    <span class="text-xs">New</span>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">add</span>
+                    <span class="text-[10px]">New</span>
                 </button>
-                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
-                    <span class="material-symbols-outlined text-lg mb-1">folder_open</span>
-                    <span class="text-xs">Open</span>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">folder_open</span>
+                    <span class="text-[10px]">Open</span>
                 </button>
-                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
-                    <span class="material-symbols-outlined text-lg mb-1">save</span>
-                    <span class="text-xs">Save</span>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">save</span>
+                    <span class="text-[10px]">Save</span>
                 </button>
-                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
-                    <span class="material-symbols-outlined text-lg mb-1">save_as</span>
-                    <span class="text-xs">Save As</span>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">save_as</span>
+                    <span class="text-[10px]">Save As</span>
                 </button>
             </div>
             <div class="h-8 w-px bg-gray-300"></div>
             <div class="flex items-center space-x-2">
-                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
-                    <span class="material-symbols-outlined text-lg mb-1">upload</span>
-                    <span class="text-xs">Import</span>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">upload</span>
+                    <span class="text-[10px]">Import</span>
                 </button>
-                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
-                    <span class="material-symbols-outlined text-lg mb-1">download</span>
-                    <span class="text-xs">Export</span>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">download</span>
+                    <span class="text-[10px]">Export</span>
                 </button>
             </div>
         </div>
@@ -226,72 +244,298 @@
         <!-- Home Ribbon -->
         <div id="ribbon-home" class="ribbon-content hidden flex items-center space-x-4 h-full">
             <div class="flex items-center space-x-2">
-                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
-                    <span class="material-symbols-outlined text-lg mb-1">table_chart</span>
-                    <span class="text-xs">Add Entity</span>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">table_chart</span>
+                    <span class="text-[10px]">Add Entity</span>
                 </button>
-                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
-                    <span class="material-symbols-outlined text-lg mb-1">share</span>
-                    <span class="text-xs">Identifying Rel</span>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">share</span>
+                    <span class="text-[10px]">Identifying</span>
                 </button>
-                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
-                    <span class="material-symbols-outlined text-lg mb-1">link</span>
-                    <span class="text-xs">Non-Identifying</span>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">link</span>
+                    <span class="text-[10px]">Non-Identify</span>
                 </button>
-                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
-                    <span class="material-symbols-outlined text-lg mb-1">device_hub</span>
-                    <span class="text-xs">Many-to-Many</span>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">device_hub</span>
+                    <span class="text-[10px]">Many-Many</span>
                 </button>
             </div>
             <div class="h-8 w-px bg-gray-300"></div>
             <div class="flex items-center space-x-2">
-                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
-                    <span class="material-symbols-outlined text-lg mb-1">hierarchy</span>
-                    <span class="text-xs">Supertype</span>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">hierarchy</span>
+                    <span class="text-[10px]">Supertype</span>
                 </button>
-                <button class="ribbon-option flex flex-col items-center p-2 hover:bg-gray-100 rounded">
-                    <span class="material-symbols-outlined text-lg mb-1">note_add</span>
-                    <span class="text-xs">Annotation</span>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">note_add</span>
+                    <span class="text-[10px]">Annotation</span>
                 </button>
             </div>
         </div>
 
-        <!-- Other ribbons -->
-        <div id="ribbon-diagram" class="ribbon-content hidden">Diagram tools...</div>
-        <div id="ribbon-view" class="ribbon-content hidden">View options...</div>
-        <div id="ribbon-tools" class="ribbon-content hidden">Tools options...</div>
-        <div id="ribbon-help" class="ribbon-content hidden">Help options...</div>
+        <!-- Diagram Ribbon -->
+        <div id="ribbon-diagram" class="ribbon-content hidden flex items-center space-x-4 h-full">
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                    <span class="text-[10px]">Auto Layout</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">account_tree</span>
+                    <span class="text-[10px]">Hierarchical</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">radio_button_unchecked</span>
+                    <span class="text-[10px]">Circular</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">format_align_left</span>
+                    <span class="text-[10px]">Align Left</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">format_align_center</span>
+                    <span class="text-[10px]">Center</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">format_align_right</span>
+                    <span class="text-[10px]">Align Right</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">zoom_in</span>
+                    <span class="text-[10px]">Zoom In</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">zoom_out</span>
+                    <span class="text-[10px]">Zoom Out</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">fit_screen</span>
+                    <span class="text-[10px]">Fit</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">grid_on</span>
+                    <span class="text-[10px]">Grid</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">straighten</span>
+                    <span class="text-[10px]">Snap</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- View Ribbon -->
+        <div id="ribbon-view" class="ribbon-content hidden flex items-center space-x-4 h-full">
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">visibility</span>
+                    <span class="text-[10px]">Attributes</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">key</span>
+                    <span class="text-[10px]">Keys Only</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">abc</span>
+                    <span class="text-[10px]">Logical</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">storage</span>
+                    <span class="text-[10px]">Physical</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">category</span>
+                    <span class="text-[10px]">Subject Areas</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">schema</span>
+                    <span class="text-[10px]">Complete</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">layers</span>
+                    <span class="text-[10px]">Partial</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">link</span>
+                    <span class="text-[10px]">Relations</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">numbers</span>
+                    <span class="text-[10px]">Cardinality</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">label</span>
+                    <span class="text-[10px]">Role Names</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">palette</span>
+                    <span class="text-[10px]">Colors</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">text_fields</span>
+                    <span class="text-[10px]">Notation</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tools Ribbon -->
+        <div id="ribbon-tools" class="ribbon-content hidden flex items-center space-x-4 h-full">
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">fact_check</span>
+                    <span class="text-[10px]">Validate</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">rule</span>
+                    <span class="text-[10px]">Check</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">error</span>
+                    <span class="text-[10px]">Find Errors</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">compare</span>
+                    <span class="text-[10px]">Compare</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">merge</span>
+                    <span class="text-[10px]">Merge</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">code</span>
+                    <span class="text-[10px]">Generate DDL</span>
+                </button>
+                <button onclick="toggleReverseEngineering()" class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded" id="toolsRibbonRE">
+                    <span class="material-symbols-outlined text-sm">upload_file</span>
+                    <span class="text-[10px]">Reverse Eng</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">description</span>
+                    <span class="text-[10px]">Reports</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">badge</span>
+                    <span class="text-[10px]">Naming</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">play_arrow</span>
+                    <span class="text-[10px]">Run Macro</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">terminal</span>
+                    <span class="text-[10px]">Script</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Help Ribbon -->
+        <div id="ribbon-help" class="ribbon-content hidden flex items-center space-x-4 h-full">
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">menu_book</span>
+                    <span class="text-[10px]">User Guide</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">school</span>
+                    <span class="text-[10px]">Tutorials</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">keyboard</span>
+                    <span class="text-[10px]">Shortcuts</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">support_agent</span>
+                    <span class="text-[10px]">Support</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">bug_report</span>
+                    <span class="text-[10px]">Report Bug</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">update</span>
+                    <span class="text-[10px]">Updates</span>
+                </button>
+            </div>
+            <div class="h-8 w-px bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">info</span>
+                    <span class="text-[10px]">About</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">assignment</span>
+                    <span class="text-[10px]">License</span>
+                </button>
+                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
+                    <span class="material-symbols-outlined text-sm">new_releases</span>
+                    <span class="text-[10px]">Release Notes</span>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- Row 4: Main Workspace (83% height) -->
-    <div class="h-[83vh] flex">
+    <!-- Row 4: Main Workspace (81% height) -->
+    <div class="h-[81vh] flex">
         <!-- Column 1: Left Navigation (20% width) -->
         <div class="w-[20%] flex">
             <!-- Extreme Left Vertical Menu -->
             <div class="extreme-left-nav flex flex-col items-center py-4 space-y-4">
-                <a href="index.html" class="p-3 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg">
+                <a href="index.html" class="p-3 text-gray-600 hover:text-indigo-600 hover:bg-gray-200 rounded-lg" title="Dashboard">
                     <span class="material-symbols-outlined">dashboard</span>
                 </a>
-                <button class="p-3 text-white bg-gray-700 rounded-lg">
+                <button class="p-3 text-indigo-600 bg-indigo-100 rounded-lg" title="Data Modeler">
                     <span class="material-symbols-outlined">table_chart</span>
                 </button>
-                <button class="p-3 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg">
+                <button class="p-3 text-gray-600 hover:text-indigo-600 hover:bg-gray-200 rounded-lg" title="Import/Export">
                     <span class="material-symbols-outlined">cloud_download</span>
                 </button>
-                <button class="p-3 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg">
+                <button onclick="toggleReverseEngineering()" class="p-3 text-gray-600 hover:text-indigo-600 hover:bg-gray-200 rounded-lg" title="Reverse Engineering" id="mainMenuRE">
+                    <span class="material-symbols-outlined">upload_file</span>
+                </button>
+                <button class="p-3 text-gray-600 hover:text-indigo-600 hover:bg-gray-200 rounded-lg" title="Compare Models">
                     <span class="material-symbols-outlined">compare_arrows</span>
                 </button>
-                <a href="users.html" class="p-3 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg">
+                <a href="users.html" class="p-3 text-gray-600 hover:text-indigo-600 hover:bg-gray-200 rounded-lg" title="Users">
                     <span class="material-symbols-outlined">group</span>
                 </a>
-                <a href="settings.html" class="p-3 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg">
+                <a href="settings.html" class="p-3 text-gray-600 hover:text-indigo-600 hover:bg-gray-200 rounded-lg" title="Settings">
                     <span class="material-symbols-outlined">settings</span>
                 </a>
             </div>
 
             <!-- Model Explorer -->
             <div class="model-explorer border-r border-gray-200 flex flex-col">
-                <div class="p-3 border-b border-gray-200 bg-gray-50">
+                <div class="p-3 border-b border-gray-200 bg-white">
                     <div class="flex items-center justify-between">
                         <h3 class="text-sm font-semibold text-gray-900">Model Explorer</h3>
                         <button class="text-gray-400 hover:text-gray-600">
@@ -432,9 +676,9 @@
         </div>
 
         <!-- Column 2: Center Diagram Canvas (55% width) -->
-        <div class="w-[55%] flex flex-col">
+        <div class="w-[55%] flex flex-col" id="canvasColumn">
             <!-- Multi-Model Tabs -->
-            <div class="bg-gray-100 border-b border-gray-200 px-4 py-2">
+            <div class="bg-gray-100 border-b border-gray-200 px-4 py-2" id="modelTabs">
                 <div class="flex space-x-1">
                     <button class="px-4 py-1 bg-white border border-gray-300 rounded-t text-sm font-medium">E-commerce Model</button>
                     <button class="px-4 py-1 text-gray-600 hover:bg-gray-200 rounded-t text-sm">+ New Model</button>
@@ -628,23 +872,367 @@
             </div>
 
             <!-- Diagram Tabs -->
-            <div class="bg-gray-100 border-t border-gray-200 px-4 py-2">
+            <div class="bg-gray-100 border-t border-gray-200 px-4 py-2" id="diagramTabs">
                 <div class="flex space-x-1">
                     <button class="px-3 py-1 bg-white border border-gray-300 rounded text-xs font-medium">Main Diagram</button>
                     <button class="px-3 py-1 text-gray-600 hover:bg-gray-200 rounded text-xs">User Management</button>
                     <button class="px-3 py-1 text-gray-600 hover:bg-gray-200 rounded text-xs">+ New Diagram</button>
                 </div>
             </div>
+
+            <!-- Reverse Engineering Mode Canvas -->
+            <div class="flex-1 bg-white overflow-y-auto hidden" id="reverseEngineeringCanvas">
+                <div class="max-w-4xl mx-auto p-8">
+                    <!-- Header -->
+                    <div class="text-center mb-8">
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2">Reverse Engineering</h1>
+                        <p class="text-gray-600">Extract database schema and generate data model</p>
+                    </div>
+
+                    <!-- Reverse Engineering Flow -->
+                    <div class="space-y-6">
+                        <!-- 1. Connection Details -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <div class="p-4 border-b border-gray-200 cursor-pointer" onclick="toggleSection('connectionDetails')">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                                        <span class="material-symbols-outlined text-lg mr-3 text-indigo-600">database</span>
+                                        Connection Details
+                                    </h3>
+                                    <span class="material-symbols-outlined text-lg text-gray-400" id="connectionDetailsIcon">expand_more</span>
+                                </div>
+                            </div>
+                            <div id="connectionDetailsContent" class="p-4 space-y-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Database Type</label>
+                                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" onchange="updateDefaultPort(this.value)">
+                                            <option value="sqlserver">SQL Server</option>
+                                            <option value="oracle">Oracle</option>
+                                            <option value="mysql">MySQL</option>
+                                            <option value="postgresql">PostgreSQL</option>
+                                            <option value="db2">IBM DB2</option>
+                                            <option value="snowflake">Snowflake</option>
+                                            <option value="bigquery">Google BigQuery</option>
+                                            <option value="redshift">Amazon Redshift</option>
+                                            <option value="msfabric">MS Fabric</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Port</label>
+                                        <input type="text" id="portField" value="1433" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Server/Host</label>
+                                    <input type="text" placeholder="localhost" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">Authentication</label>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center">
+                                            <input type="radio" name="auth" value="windows" class="mr-3">
+                                            <span class="text-sm">Windows Authentication</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="auth" value="sql" class="mr-3" checked>
+                                            <span class="text-sm">SQL Authentication</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="auth" value="cloud" class="mr-3">
+                                            <span class="text-sm">Cloud Authentication</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                                        <input type="text" placeholder="username" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                                        <input type="password" placeholder="password" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    </div>
+                                </div>
+                                <button onclick="testConnection()" class="w-full bg-indigo-600 text-white px-4 py-3 rounded-md text-sm font-medium hover:bg-indigo-700 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-base mr-2">wifi_protected_setup</span>
+                                    Test Connection
+                                </button>
+                                <div id="connectionStatus" class="text-sm p-3 rounded-md hidden"></div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Schema & Object Selection -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <div class="p-4 border-b border-gray-200 cursor-pointer" onclick="toggleSection('objectSelection')">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                                        <span class="material-symbols-outlined text-lg mr-3 text-indigo-600">account_tree</span>
+                                        Schema & Object Selection
+                                    </h3>
+                                    <span class="material-symbols-outlined text-lg text-gray-400" id="objectSelectionIcon">expand_more</span>
+                                </div>
+                            </div>
+                            <div id="objectSelectionContent" class="p-4 space-y-4 hidden">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Database/Schema</label>
+                                    <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                        <option value="">Select database...</option>
+                                        <option value="northwind">Northwind</option>
+                                        <option value="adventureworks">AdventureWorks</option>
+                                        <option value="sakila">Sakila</option>
+                                    </select>
+                                </div>
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-3">Object Types</label>
+                                        <div class="space-y-2">
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3" checked>
+                                                <span class="text-sm">Tables</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3" checked>
+                                                <span class="text-sm">Views</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3">
+                                                <span class="text-sm">Stored Procedures</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3">
+                                                <span class="text-sm">Functions</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3" checked>
+                                                <span class="text-sm">Indexes</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3" checked>
+                                                <span class="text-sm">Relationships</span>
+                                            </label>
+                                        </div>
+                                        <div class="flex gap-3 mt-3">
+                                            <button onclick="selectAllObjects()" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">Select All</button>
+                                            <button onclick="deselectAllObjects()" class="text-sm text-gray-600 hover:text-gray-700 font-medium">Deselect All</button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-3">Object Preview</label>
+                                        <div class="border border-gray-200 rounded-md max-h-48 overflow-y-auto">
+                                            <div class="p-3">
+                                                <div class="flex items-center text-sm text-gray-600 mb-2">
+                                                    <span class="material-symbols-outlined text-base mr-2">table_chart</span>
+                                                    <span class="font-medium">Tables (5)</span>
+                                                </div>
+                                                <div class="ml-6 space-y-2">
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-sm">Customers</span>
+                                                        <button class="text-gray-400 hover:text-gray-600">
+                                                            <span class="material-symbols-outlined text-sm">more_vert</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-sm">Orders</span>
+                                                        <button class="text-gray-400 hover:text-gray-600">
+                                                            <span class="material-symbols-outlined text-sm">more_vert</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-sm">Products</span>
+                                                        <button class="text-gray-400 hover:text-gray-600">
+                                                            <span class="material-symbols-outlined text-sm">more_vert</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-sm">Categories</span>
+                                                        <button class="text-gray-400 hover:text-gray-600">
+                                                            <span class="material-symbols-outlined text-sm">more_vert</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-sm">Suppliers</span>
+                                                        <button class="text-gray-400 hover:text-gray-600">
+                                                            <span class="material-symbols-outlined text-sm">more_vert</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Naming & Standards -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <div class="p-4 border-b border-gray-200 cursor-pointer" onclick="toggleSection('namingStandards')">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                                        <span class="material-symbols-outlined text-lg mr-3 text-indigo-600">badge</span>
+                                        Naming & Standards
+                                    </h3>
+                                    <span class="material-symbols-outlined text-lg text-gray-400" id="namingStandardsIcon">expand_more</span>
+                                </div>
+                            </div>
+                            <div id="namingStandardsContent" class="p-4 space-y-4 hidden">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-sm font-medium text-gray-700">Apply Naming Standards</label>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    </label>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Case Enforcement</label>
+                                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                            <option value="uppercase">UPPERCASE</option>
+                                            <option value="lowercase">lowercase</option>
+                                            <option value="camelcase">CamelCase</option>
+                                            <option value="pascalcase">PascalCase</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Prefix</label>
+                                        <input type="text" placeholder="tbl_" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Suffix</label>
+                                        <input type="text" placeholder="_t" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="mr-3">
+                                    <label class="text-sm text-gray-700">Auto-rename conflicts</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Options & Filters -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <div class="p-4 border-b border-gray-200 cursor-pointer" onclick="toggleSection('optionsFilters')">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                                        <span class="material-symbols-outlined text-lg mr-3 text-indigo-600">tune</span>
+                                        Options & Filters
+                                    </h3>
+                                    <span class="material-symbols-outlined text-lg text-gray-400" id="optionsFiltersIcon">expand_more</span>
+                                </div>
+                            </div>
+                            <div id="optionsFiltersContent" class="p-4 space-y-4 hidden">
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div class="space-y-4">
+                                        <div class="flex items-center justify-between">
+                                            <label class="text-sm font-medium text-gray-700">Import only objects with relationships</label>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" class="sr-only peer">
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                            </label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="mr-3" checked>
+                                            <label class="text-sm text-gray-700">Exclude system objects</label>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Object Name</label>
+                                            <input type="text" placeholder="e.g., ^(tbl|view).*" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                            <p class="text-xs text-gray-500 mt-1">Use regex patterns to include/exclude objects</p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Object Limit (Performance)</label>
+                                            <input type="number" value="100" min="1" max="1000" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Preview & Confirmation -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <div class="p-4 border-b border-gray-200 cursor-pointer" onclick="toggleSection('previewConfirmation')">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                                        <span class="material-symbols-outlined text-lg mr-3 text-indigo-600">preview</span>
+                                        Preview & Confirmation
+                                    </h3>
+                                    <span class="material-symbols-outlined text-lg text-gray-400" id="previewConfirmationIcon">expand_more</span>
+                                </div>
+                            </div>
+                            <div id="previewConfirmationContent" class="p-4 space-y-4 hidden">
+                                <button onclick="previewObjects()" class="w-full bg-gray-600 text-white px-4 py-3 rounded-md text-sm font-medium hover:bg-gray-700 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-base mr-2">preview</span>
+                                    Preview Objects
+                                </button>
+                                <div id="previewResults" class="hidden">
+                                    <div class="bg-gray-50 border border-gray-200 rounded-md p-4">
+                                        <div class="text-sm font-medium text-gray-700 mb-3">Selected Objects:</div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="space-y-1">
+                                                <div class="flex items-center justify-between text-sm">
+                                                    <span>Tables:</span>
+                                                    <span class="font-medium">5</span>
+                                                </div>
+                                                <div class="flex items-center justify-between text-sm">
+                                                    <span>Views:</span>
+                                                    <span class="font-medium">2</span>
+                                                </div>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <div class="flex items-center justify-between text-sm">
+                                                    <span>Relationships:</span>
+                                                    <span class="font-medium">8</span>
+                                                </div>
+                                                <div class="flex items-center justify-between text-sm">
+                                                    <span>Indexes:</span>
+                                                    <span class="font-medium">12</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                                    <div class="flex items-center text-sm text-blue-700">
+                                        <span class="material-symbols-outlined text-base mr-2">info</span>
+                                        <span>Estimated diagram size: Medium (7 entities, 8 relationships)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. Actions -->
+                        <div class="flex gap-4 pt-6 border-t border-gray-200">
+                            <button onclick="generateDiagram()" class="flex-1 bg-indigo-600 text-white px-6 py-4 rounded-md text-base font-medium hover:bg-indigo-700 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-lg mr-3">auto_awesome</span>
+                                Generate Diagram
+                            </button>
+                            <button onclick="saveTemplate()" class="bg-gray-200 text-gray-700 px-6 py-4 rounded-md text-base font-medium hover:bg-gray-300 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-lg mr-2">save</span>
+                                Save Template
+                            </button>
+                            <button onclick="cancelReverseEngineering()" class="bg-gray-200 text-gray-700 px-6 py-4 rounded-md text-base font-medium hover:bg-gray-300">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Column 3: Right Properties Pane (25% width) -->
-        <div class="w-[25%] bg-white border-l border-gray-200 flex flex-col">
+        <div class="w-[25%] bg-white border-l border-gray-200 flex flex-col" id="propertiesPanel">
+            <!-- Header -->
             <div class="p-4 border-b border-gray-200">
-                <h3 class="font-semibold text-gray-900">Properties</h3>
-                <p class="text-xs text-gray-500 mt-1">Entity: Customer</p>
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-semibold text-gray-900" id="panelTitle">Properties</h3>
+                </div>
+                <p class="text-xs text-gray-500" id="panelSubtitle">Entity: Customer</p>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-4">
+            <!-- Properties Mode Content -->
+            <div id="propertiesMode" class="flex-1 overflow-y-auto p-4">
                 <div class="space-y-6">
                     <!-- Entity Properties -->
                     <div>
@@ -737,6 +1325,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -1072,8 +1661,195 @@
             }
         });
 
+        // Reverse Engineering Functions
+        let reverseEngineeringMode = false;
+
+        function toggleReverseEngineering() {
+            reverseEngineeringMode = !reverseEngineeringMode;
+            const canvasColumn = document.getElementById('canvasColumn');
+            const propertiesPanel = document.getElementById('propertiesPanel');
+            const modelExplorer = document.querySelector('.model-explorer');
+            const diagramCanvas = document.getElementById('diagramCanvas');
+            const diagramTabs = document.getElementById('diagramTabs');
+            const reverseCanvas = document.getElementById('reverseEngineeringCanvas');
+            const mainMenuRE = document.getElementById('mainMenuRE');
+            const toolsRibbonRE = document.getElementById('toolsRibbonRE');
+
+            if (reverseEngineeringMode) {
+                // Enter RE mode - use full canvas width
+                canvasColumn.classList.remove('w-[55%]');
+                canvasColumn.classList.add('w-[80%]');
+
+                // Hide properties panel
+                propertiesPanel.classList.add('hidden');
+
+                // Disable/gray out model explorer
+                modelExplorer.classList.add('opacity-50', 'pointer-events-none');
+
+                // Hide diagram canvas and tabs, show RE canvas
+                diagramCanvas.classList.add('hidden');
+                diagramTabs.classList.add('hidden');
+                reverseCanvas.classList.remove('hidden');
+
+                // Update main menu button
+                mainMenuRE.classList.remove('text-gray-600', 'hover:text-indigo-600', 'hover:bg-gray-200');
+                mainMenuRE.classList.add('text-white', 'bg-indigo-600');
+                mainMenuRE.title = 'Exit Reverse Engineering';
+
+                // Update tools ribbon button
+                if (toolsRibbonRE) {
+                    toolsRibbonRE.classList.add('bg-indigo-100');
+                }
+            } else {
+                // Exit RE mode - restore normal layout
+                canvasColumn.classList.remove('w-[80%]');
+                canvasColumn.classList.add('w-[55%]');
+
+                // Show properties panel
+                propertiesPanel.classList.remove('hidden');
+
+                // Re-enable model explorer
+                modelExplorer.classList.remove('opacity-50', 'pointer-events-none');
+
+                // Show diagram canvas and tabs, hide RE canvas
+                diagramCanvas.classList.remove('hidden');
+                diagramTabs.classList.remove('hidden');
+                reverseCanvas.classList.add('hidden');
+
+                // Update main menu button
+                mainMenuRE.classList.remove('text-white', 'bg-indigo-600');
+                mainMenuRE.classList.add('text-gray-600', 'hover:text-indigo-600', 'hover:bg-gray-200');
+                mainMenuRE.title = 'Reverse Engineering';
+
+                // Update tools ribbon button
+                if (toolsRibbonRE) {
+                    toolsRibbonRE.classList.remove('bg-indigo-100');
+                }
+            }
+        }
+
+        function toggleSection(sectionName) {
+            const content = document.getElementById(sectionName + 'Content');
+            const icon = document.getElementById(sectionName + 'Icon');
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.textContent = 'expand_less';
+            } else {
+                content.classList.add('hidden');
+                icon.textContent = 'expand_more';
+            }
+        }
+
+        function updateDefaultPort(dbType) {
+            const portField = document.getElementById('portField');
+            const portMap = {
+                'sqlserver': '1433',
+                'oracle': '1521',
+                'mysql': '3306',
+                'postgresql': '5432',
+                'db2': '50000',
+                'snowflake': '443',
+                'bigquery': '443',
+                'redshift': '5439',
+                'msfabric': '1433'
+            };
+            if (portField) {
+                portField.value = portMap[dbType] || '';
+            }
+        }
+
+        function testConnection() {
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.classList.remove('hidden');
+            statusDiv.className = 'text-xs p-2 rounded bg-blue-50 border border-blue-200 text-blue-700';
+            statusDiv.textContent = 'Testing connection...';
+
+            // Simulate connection test
+            setTimeout(() => {
+                const success = Math.random() > 0.3; // 70% success rate for demo
+                if (success) {
+                    statusDiv.className = 'text-xs p-2 rounded bg-green-50 border border-green-200 text-green-700';
+                    statusDiv.innerHTML = '<span class="material-symbols-outlined text-sm mr-1">check_circle</span>Connection successful!';
+                } else {
+                    statusDiv.className = 'text-xs p-2 rounded bg-red-50 border border-red-200 text-red-700';
+                    statusDiv.innerHTML = '<span class="material-symbols-outlined text-sm mr-1">error</span>Connection failed: Invalid credentials';
+                }
+            }, 2000);
+        }
+
+        function selectAllObjects() {
+            const checkboxes = document.querySelectorAll('#objectSelectionContent input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+        }
+
+        function deselectAllObjects() {
+            const checkboxes = document.querySelectorAll('#objectSelectionContent input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+        }
+
+        function previewObjects() {
+            const previewResults = document.getElementById('previewResults');
+            previewResults.classList.remove('hidden');
+
+            // Simulate loading preview data
+            setTimeout(() => {
+                previewResults.innerHTML = `
+                    <div class="bg-gray-50 border border-gray-200 rounded p-2">
+                        <div class="text-xs font-medium text-gray-700 mb-2">Selected Objects:</div>
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between text-xs">
+                                <span>Tables: 12</span>
+                                <span>Views: 3</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs">
+                                <span>Relationships: 15</span>
+                                <span>Indexes: 28</span>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-2">
+                                <strong>Tables:</strong> Customers, Orders, Products, OrderDetails, Categories, Suppliers, Employees, Shippers, Territories, Region, CustomerCustomerDemo, CustomerDemographics
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }, 1000);
+        }
+
+        function generateDiagram() {
+            // Show loading state
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span class="material-symbols-outlined text-base mr-2 animate-spin">refresh</span>Generating...';
+            button.disabled = true;
+
+            // Simulate diagram generation
+            setTimeout(() => {
+                alert('Diagram generated successfully! 12 tables and 15 relationships have been added to the canvas.');
+
+                // Reset button
+                button.innerHTML = originalText;
+                button.disabled = false;
+
+                // Exit reverse engineering mode
+                toggleReverseEngineering();
+            }, 3000);
+        }
+
+        function saveTemplate() {
+            const templateName = prompt('Enter template name:', 'My Database Template');
+            if (templateName) {
+                alert(`Template "${templateName}" saved successfully!`);
+            }
+        }
+
+        function cancelReverseEngineering() {
+            if (confirm('Are you sure you want to cancel? All settings will be lost.')) {
+                toggleReverseEngineering();
+            }
+        }
+
         console.log('Erwin Cloud DM - Data Modeler loaded successfully!');
-        console.log('Features: Docked toolbar, contextual toolbar, keyboard shortcuts, tooltips');
+        console.log('Features: Docked toolbar, contextual toolbar, keyboard shortcuts, tooltips, reverse engineering');
     </script>
 </body>
 </html>
