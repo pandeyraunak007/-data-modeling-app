@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Compare - Erwin Cloud DM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tree-item { padding-left: 20px; }
+        .tree-item.level-1 { padding-left: 0px; }
+        .tree-item.level-2 { padding-left: 20px; }
+        .tree-item.level-3 { padding-left: 40px; }
+        .diff-same { background: #f9fafb; border-left: 3px solid #10b981; }
+        .diff-conflict { background: #fef3c7; border-left: 3px solid #f59e0b; }
+        .diff-missing { background: #fef2f2; border-left: 3px solid #ef4444; }
+        .diff-added { background: #f0fdf4; border-left: 3px solid #22c55e; }
+        .slide-drawer { transform: translateX(100%); transition: transform 0.3s ease; }
+        .slide-drawer.open { transform: translateX(0); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Step 1: Model Selection -->
+    <div id="modelSelection" class="min-h-screen flex items-center justify-center p-8">
+        <div class="max-w-2xl w-full">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                    <span class="material-symbols-outlined text-2xl text-blue-600">compare_arrows</span>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Complete Compare</h1>
+                <p class="text-gray-600">Select models to compare and merge</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border p-8">
+                <div class="space-y-6">
+                    <!-- Left Model (Source) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Left Model (Source)
+                        </label>
+                        <select id="leftModel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select source model...</option>
+                            <option value="current" selected>Current Model (CustomerDB_v1.2)</option>
+                            <option value="local1">CustomerDB_v1.1.dmf</option>
+                            <option value="local2">OrderSystem_v2.0.dmf</option>
+                            <option value="repo1">Repository: MainDB_v3.1</option>
+                        </select>
+                    </div>
+
+                    <!-- Right Model (Target) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Right Model (Target)
+                        </label>
+                        <select id="rightModel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select target model...</option>
+                            <option value="local3" selected>CustomerDB_v1.3.dmf</option>
+                            <option value="local4">CustomerDB_v1.4_beta.dmf</option>
+                            <option value="repo2">Repository: CustomerDB_latest</option>
+                            <option value="db1">Database: Production_CustomerDB</option>
+                        </select>
+                    </div>
+
+                    <!-- Merge Model Name (Optional) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Merge Model Name (Optional)
+                        </label>
+                        <input type="text" id="mergeModelName"
+                               value="CustomerDB_v1.3_merged"
+                               placeholder="Auto-suggested merge name"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Will be auto-suggested based on selected models</p>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button onclick="window.location.href='modeler.html'"
+                                class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button onclick="startComparison()"
+                                class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            Next
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Comparison View -->
+    <div id="comparisonView" class="hidden min-h-screen flex flex-col">
+
+        <!-- Row 1: Toolbar (Persistent, Full Width) -->
+        <div class="bg-white border-b border-gray-200 px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <!-- Filter/Search box -->
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
+                            <input type="text" placeholder="🔍 Filter objects..." id="searchFilter" oninput="applyFilters()"
+                                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-64 text-sm">
+                        </div>
+
+                        <!-- Display Options -->
+                        <div class="flex items-center space-x-4 text-sm">
+                            <span class="text-gray-600 font-medium">Display:</span>
+                            <label class="flex items-center">
+                                <input type="radio" name="displayMode" value="all" checked onchange="applyDisplayMode()" class="mr-1">
+                                <span>All Objects</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="displayMode" value="differences" onchange="applyDisplayMode()" class="mr-1">
+                                <span>Only Differences</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="displayMode" value="conflicts" onchange="applyDisplayMode()" class="mr-1">
+                                <span>Only Conflicts</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="displayMode" value="missing" onchange="applyDisplayMode()" class="mr-1">
+                                <span>Only Missing</span>
+                            </label>
+                        </div>
+
+                        <!-- Object Type Filters -->
+                        <div class="flex items-center space-x-3 text-sm border-l border-gray-300 pl-4">
+                            <span class="text-gray-600 font-medium">Types:</span>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="filterTables" checked onchange="applyFilters()" class="mr-1">
+                                <span>Tables</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="filterViews" checked onchange="applyFilters()" class="mr-1">
+                                <span>Views</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="filterKeys" checked onchange="applyFilters()" class="mr-1">
+                                <span>Keys</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="filterRelationships" checked onchange="applyFilters()" class="mr-1">
+                                <span>Relationships</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="filterIndexes" checked onchange="applyFilters()" class="mr-1">
+                                <span>Indexes</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="flex items-center space-x-2">
+                        <button onclick="acceptAllLeft()" class="bg-blue-100 text-blue-800 px-3 py-1.5 rounded text-sm hover:bg-blue-200">
+                            ⚡ Accept All Left
+                        </button>
+                        <button onclick="acceptAllRight()" class="bg-green-100 text-green-800 px-3 py-1.5 rounded text-sm hover:bg-green-200">
+                            ⚡ Accept All Right
+                        </button>
+                        <button onclick="autoMerge()" class="bg-purple-100 text-purple-800 px-3 py-1.5 rounded text-sm hover:bg-purple-200">
+                            ⚡ Auto Merge
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <!-- Display Summary -->
+                    <div class="text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded">
+                        <span id="visibleCount">Showing all objects</span>
+                    </div>
+
+                    <!-- Conflict Status -->
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-600">⏳ Conflicts:</span>
+                        <button onclick="toggleConflictFilter('pending')" id="pendingBtn"
+                                class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">
+                            Pending (8)
+                        </button>
+                        <button onclick="toggleConflictFilter('resolved')" id="resolvedBtn"
+                                class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                            Resolved (0)
+                        </button>
+                    </div>
+
+                    <!-- Export Report -->
+                    <button onclick="toggleReportDrawer()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
+                        📑 Export Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Comparison Grid (3 Columns) -->
+        <div class="flex-1 flex">
+            <!-- Left Column: Source Model -->
+            <div class="w-1/3 bg-white border-r border-gray-200 overflow-y-auto">
+                <div class="p-4 border-b border-gray-200 bg-blue-50">
+                    <h3 class="font-semibold text-blue-900">Source Model</h3>
+                    <p class="text-sm text-blue-600">CustomerDB_v1.2</p>
+                </div>
+                <div id="leftTree" class="p-2">
+                    <!-- Tables Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="tables">
+                        <div class="flex items-center cursor-pointer" onclick="toggleTreeNode('leftTables')">
+                            <span class="material-symbols-outlined text-sm mr-1" id="leftTablesIcon">expand_less</span>
+                            <span class="material-symbols-outlined text-sm mr-2 text-blue-600">table_view</span>
+                            <span class="font-medium">Tables (5)</span>
+                        </div>
+                        <div id="leftTables" class="mt-1">
+                            <div class="tree-item level-2 py-1 diff-same cursor-pointer" onclick="selectObject('Customer', 'table')" data-name="customer">
+                                <span class="material-symbols-outlined text-xs mr-2 text-green-500">circle</span>
+                                <span>Customer</span>
+                                <span class="text-xs text-gray-500 ml-auto">4 cols</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-conflict cursor-pointer" onclick="selectObject('Order', 'table')" data-name="order">
+                                <span class="material-symbols-outlined text-xs mr-2 text-yellow-500">warning</span>
+                                <span>Order</span>
+                                <span class="text-xs text-gray-500 ml-auto">5 cols</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-conflict cursor-pointer" onclick="selectObject('OrderItem', 'table')" data-name="orderitem">
+                                <span class="material-symbols-outlined text-xs mr-2 text-yellow-500">warning</span>
+                                <span>OrderItem</span>
+                                <span class="text-xs text-gray-500 ml-auto">4 cols</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-missing cursor-pointer" onclick="selectObject('TempOrder', 'table')" data-name="temporder">
+                                <span class="material-symbols-outlined text-xs mr-2 text-red-500">remove_circle</span>
+                                <span>TempOrder</span>
+                                <span class="text-xs text-gray-500 ml-auto">2 cols</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-added cursor-pointer" onclick="selectObject('Product', 'table')" data-name="product">
+                                <span class="material-symbols-outlined text-xs mr-2 text-gray-400">add_circle_outline</span>
+                                <span class="text-gray-400">Product</span>
+                                <span class="text-xs text-gray-400 ml-auto">Missing</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Views Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="views">
+                        <div class="flex items-center cursor-pointer" onclick="toggleTreeNode('leftViews')">
+                            <span class="material-symbols-outlined text-sm mr-1" id="leftViewsIcon">expand_less</span>
+                            <span class="material-symbols-outlined text-sm mr-2 text-purple-600">visibility</span>
+                            <span class="font-medium">Views (2)</span>
+                        </div>
+                        <div id="leftViews" class="mt-1">
+                            <div class="tree-item level-2 py-1 diff-same cursor-pointer" onclick="selectObject('CustomerOrders', 'view')" data-name="customerorders">
+                                <span class="material-symbols-outlined text-xs mr-2 text-green-500">circle</span>
+                                <span>CustomerOrders</span>
+                                <span class="text-xs text-gray-500 ml-auto">View</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-conflict cursor-pointer" onclick="selectObject('OrderSummary', 'view')" data-name="ordersummary">
+                                <span class="material-symbols-outlined text-xs mr-2 text-yellow-500">warning</span>
+                                <span>OrderSummary</span>
+                                <span class="text-xs text-gray-500 ml-auto">View</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Keys Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="keys">
+                        <div class="flex items-center cursor-pointer" onclick="toggleTreeNode('leftKeys')">
+                            <span class="material-symbols-outlined text-sm mr-1" id="leftKeysIcon">expand_less</span>
+                            <span class="material-symbols-outlined text-sm mr-2 text-orange-600">key</span>
+                            <span class="font-medium">Keys (6)</span>
+                        </div>
+                        <div id="leftKeys" class="mt-1">
+                            <div class="tree-item level-2 py-1 diff-same cursor-pointer" onclick="selectObject('PK_Customer', 'key')" data-name="pk_customer">
+                                <span class="material-symbols-outlined text-xs mr-2 text-green-500">circle</span>
+                                <span>PK_Customer</span>
+                                <span class="text-xs text-gray-500 ml-auto">PK</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-same cursor-pointer" onclick="selectObject('PK_Order', 'key')" data-name="pk_order">
+                                <span class="material-symbols-outlined text-xs mr-2 text-green-500">circle</span>
+                                <span>PK_Order</span>
+                                <span class="text-xs text-gray-500 ml-auto">PK</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-conflict cursor-pointer" onclick="selectObject('FK_Order_Customer', 'key')" data-name="fk_order_customer">
+                                <span class="material-symbols-outlined text-xs mr-2 text-yellow-500">warning</span>
+                                <span>FK_Order_Customer</span>
+                                <span class="text-xs text-gray-500 ml-auto">FK</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-missing cursor-pointer" onclick="selectObject('UK_Customer_Email', 'key')" data-name="uk_customer_email">
+                                <span class="material-symbols-outlined text-xs mr-2 text-red-500">remove_circle</span>
+                                <span>UK_Customer_Email</span>
+                                <span class="text-xs text-gray-500 ml-auto">UK</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-added cursor-pointer" onclick="selectObject('FK_OrderItem_Product', 'key')" data-name="fk_orderitem_product">
+                                <span class="material-symbols-outlined text-xs mr-2 text-gray-400">add_circle_outline</span>
+                                <span class="text-gray-400">FK_OrderItem_Product</span>
+                                <span class="text-xs text-gray-400 ml-auto">Missing</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-added cursor-pointer" onclick="selectObject('PK_Product', 'key')" data-name="pk_product">
+                                <span class="material-symbols-outlined text-xs mr-2 text-gray-400">add_circle_outline</span>
+                                <span class="text-gray-400">PK_Product</span>
+                                <span class="text-xs text-gray-400 ml-auto">Missing</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Relationships Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="relationships">
+                        <div class="flex items-center cursor-pointer" onclick="toggleTreeNode('leftRels')">
+                            <span class="material-symbols-outlined text-sm mr-1" id="leftRelsIcon">expand_less</span>
+                            <span class="material-symbols-outlined text-sm mr-2 text-green-600">link</span>
+                            <span class="font-medium">Relationships (2)</span>
+                        </div>
+                        <div id="leftRels" class="mt-1">
+                            <div class="tree-item level-2 py-1 diff-same cursor-pointer" onclick="selectObject('Customer-Order', 'relationship')" data-name="customer-order">
+                                <span class="material-symbols-outlined text-xs mr-2 text-green-500">circle</span>
+                                <span>Customer → Order</span>
+                                <span class="text-xs text-gray-500 ml-auto">1:M</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-added cursor-pointer" onclick="selectObject('Order-Product', 'relationship')" data-name="order-product">
+                                <span class="material-symbols-outlined text-xs mr-2 text-gray-400">add_circle_outline</span>
+                                <span class="text-gray-400">Order → Product</span>
+                                <span class="text-xs text-gray-400 ml-auto">Missing</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Indexes Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="indexes">
+                        <div class="flex items-center cursor-pointer" onclick="toggleTreeNode('leftIndexes')">
+                            <span class="material-symbols-outlined text-sm mr-1" id="leftIndexesIcon">expand_less</span>
+                            <span class="material-symbols-outlined text-sm mr-2 text-indigo-600">speed</span>
+                            <span class="font-medium">Indexes (4)</span>
+                        </div>
+                        <div id="leftIndexes" class="mt-1">
+                            <div class="tree-item level-2 py-1 diff-same cursor-pointer" onclick="selectObject('IDX_Customer_LastName', 'index')" data-name="idx_customer_lastname">
+                                <span class="material-symbols-outlined text-xs mr-2 text-green-500">circle</span>
+                                <span>IDX_Customer_LastName</span>
+                                <span class="text-xs text-gray-500 ml-auto">Index</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-conflict cursor-pointer" onclick="selectObject('IDX_Order_Date', 'index')" data-name="idx_order_date">
+                                <span class="material-symbols-outlined text-xs mr-2 text-yellow-500">warning</span>
+                                <span>IDX_Order_Date</span>
+                                <span class="text-xs text-gray-500 ml-auto">Index</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-missing cursor-pointer" onclick="selectObject('IDX_Order_Status', 'index')" data-name="idx_order_status">
+                                <span class="material-symbols-outlined text-xs mr-2 text-red-500">remove_circle</span>
+                                <span>IDX_Order_Status</span>
+                                <span class="text-xs text-gray-500 ml-auto">Index</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-added cursor-pointer" onclick="selectObject('IDX_Product_Category', 'index')" data-name="idx_product_category">
+                                <span class="material-symbols-outlined text-xs mr-2 text-gray-400">add_circle_outline</span>
+                                <span class="text-gray-400">IDX_Product_Category</span>
+                                <span class="text-xs text-gray-400 ml-auto">Missing</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Column: Merge Model -->
+            <div class="w-1/3 bg-purple-50 border-r border-gray-200 overflow-y-auto">
+                <div class="p-4 border-b border-gray-200 bg-purple-100">
+                    <h3 class="font-semibold text-purple-900">Merge Model</h3>
+                    <p class="text-sm text-purple-600">CustomerDB_v1.3_merged</p>
+                </div>
+                <div id="mergeArea" class="p-4">
+                    <div class="text-center text-gray-500 py-8">
+                        <span class="material-symbols-outlined text-4xl mb-2 block">merge</span>
+                        <p>Select an object to see merge options</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Target Model -->
+            <div class="w-1/3 bg-white overflow-y-auto">
+                <div class="p-4 border-b border-gray-200 bg-green-50">
+                    <h3 class="font-semibold text-green-900">Target Model</h3>
+                    <p class="text-sm text-green-600">CustomerDB_v1.3</p>
+                </div>
+                <div id="rightTree" class="p-2">
+                    <!-- Tables Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="tables">
+                        <div class="flex items-center cursor-pointer" onclick="toggleTreeNode('rightTables')">
+                            <span class="material-symbols-outlined text-sm mr-1" id="rightTablesIcon">expand_less</span>
+                            <span class="material-symbols-outlined text-sm mr-2 text-blue-600">table_view</span>
+                            <span class="font-medium">Tables (4)</span>
+                        </div>
+                        <div id="rightTables" class="mt-1">
+                            <div class="tree-item level-2 py-1 diff-same cursor-pointer" onclick="selectObject('Customer', 'table')" data-name="customer">
+                                <span class="material-symbols-outlined text-xs mr-2 text-green-500">circle</span>
+                                <span>Customer</span>
+                                <span class="text-xs text-gray-500 ml-auto">4 cols</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-conflict cursor-pointer" onclick="selectObject('Order', 'table')" data-name="order">
+                                <span class="material-symbols-outlined text-xs mr-2 text-yellow-500">warning</span>
+                                <span>Order</span>
+                                <span class="text-xs text-gray-500 ml-auto">6 cols</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-conflict cursor-pointer" onclick="selectObject('OrderItem', 'table')" data-name="orderitem">
+                                <span class="material-symbols-outlined text-xs mr-2 text-yellow-500">warning</span>
+                                <span>OrderItem</span>
+                                <span class="text-xs text-gray-500 ml-auto">5 cols</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-added cursor-pointer" onclick="selectObject('TempOrder', 'table')" data-name="temporder">
+                                <span class="material-symbols-outlined text-xs mr-2 text-gray-400">add_circle_outline</span>
+                                <span class="text-gray-400">TempOrder</span>
+                                <span class="text-xs text-gray-400 ml-auto">Missing</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-missing cursor-pointer" onclick="selectObject('Product', 'table')" data-name="product">
+                                <span class="material-symbols-outlined text-xs mr-2 text-red-500">remove_circle</span>
+                                <span>Product</span>
+                                <span class="text-xs text-gray-500 ml-auto">5 cols</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Views Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="views">
+                        <div class="flex items-center cursor-pointer" onclick="toggleTreeNode('rightViews')">
+                            <span class="material-symbols-outlined text-sm mr-1" id="rightViewsIcon">expand_less</span>
+                            <span class="material-symbols-outlined text-sm mr-2 text-purple-600">visibility</span>
+                            <span class="font-medium">Views (3)</span>
+                        </div>
+                        <div id="rightViews" class="mt-1">
+                            <div class="tree-item level-2 py-1 diff-same cursor-pointer" onclick="selectObject('CustomerOrders', 'view')" data-name="customerorders">
+                                <span class="material-symbols-outlined text-xs mr-2 text-green-500">circle</span>
+                                <span>CustomerOrders</span>
+                                <span class="text-xs text-gray-500 ml-auto">View</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-conflict cursor-pointer" onclick="selectObject('OrderSummary', 'view')" data-name="ordersummary">
+                                <span class="material-symbols-outlined text-xs mr-2 text-yellow-500">warning</span>
+                                <span>OrderSummary</span>
+                                <span class="text-xs text-gray-500 ml-auto">View</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-missing cursor-pointer" onclick="selectObject('ProductCatalog', 'view')" data-name="productcatalog">
+                                <span class="material-symbols-outlined text-xs mr-2 text-red-500">remove_circle</span>
+                                <span>ProductCatalog</span>
+                                <span class="text-xs text-gray-500 ml-auto">View</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Keys Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="keys">
+                        <div class="flex items-center cursor-pointer" onclick="toggleTreeNode('rightKeys')">
+                            <span class="material-symbols-outlined text-sm mr-1" id="rightKeysIcon">expand_less</span>
+                            <span class="material-symbols-outlined text-sm mr-2 text-orange-600">key</span>
+                            <span class="font-medium">Keys (7)</span>
+                        </div>
+                        <div id="rightKeys" class="mt-1">
+                            <div class="tree-item level-2 py-1 diff-same cursor-pointer" onclick="selectObject('PK_Customer', 'key')" data-name="pk_customer">
+                                <span class="material-symbols-outlined text-xs mr-2 text-green-500">circle</span>
+                                <span>PK_Customer</span>
+                                <span class="text-xs text-gray-500 ml-auto">PK</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-same cursor-pointer" onclick="selectObject('PK_Order', 'key')" data-name="pk_order">
+                                <span class="material-symbols-outlined text-xs mr-2 text-green-500">circle</span>
+                                <span>PK_Order</span>
+                                <span class="text-xs text-gray-500 ml-auto">PK</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-conflict cursor-pointer" onclick="selectObject('FK_Order_Customer', 'key')" data-name="fk_order_customer">
+                                <span class="material-symbols-outlined text-xs mr-2 text-yellow-500">warning</span>
+                                <span>FK_Order_Customer</span>
+                                <span class="text-xs text-gray-500 ml-auto">FK</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-added cursor-pointer" onclick="selectObject('UK_Customer_Email', 'key')" data-name="uk_customer_email">
+                                <span class="material-symbols-outlined text-xs mr-2 text-gray-400">add_circle_outline</span>
+                                <span class="text-gray-400">UK_Customer_Email</span>
+                                <span class="text-xs text-gray-400 ml-auto">Missing</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-missing cursor-pointer" onclick="selectObject('FK_OrderItem_Product', 'key')" data-name="fk_orderitem_product">
+                                <span class="material-symbols-outlined text-xs mr-2 text-red-500">remove_circle</span>
+                                <span>FK_OrderItem_Product</span>
+                                <span class="text-xs text-gray-500 ml-auto">FK</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-missing cursor-pointer" onclick="selectObject('PK_Product', 'key')" data-name="pk_product">
+                                <span class="material-symbols-outlined text-xs mr-2 text-red-500">remove_circle</span>
+                                <span>PK_Product</span>
+                                <span class="text-xs text-gray-500 ml-auto">PK</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-missing cursor-pointer" onclick="selectObject('PK_OrderItem', 'key')" data-name="pk_orderitem">
+                                <span class="material-symbols-outlined text-xs mr-2 text-red-500">remove_circle</span>
+                                <span>PK_OrderItem</span>
+                                <span class="text-xs text-gray-500 ml-auto">PK</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Relationships Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="relationships">
+                        <div class="flex items-center cursor-pointer" onclick="toggleTreeNode('rightRels')">
+                            <span class="material-symbols-outlined text-sm mr-1" id="rightRelsIcon">expand_less</span>
+                            <span class="material-symbols-outlined text-sm mr-2 text-green-600">link</span>
+                            <span class="font-medium">Relationships (3)</span>
+                        </div>
+                        <div id="rightRels" class="mt-1">
+                            <div class="tree-item level-2 py-1 diff-same cursor-pointer" onclick="selectObject('Customer-Order', 'relationship')" data-name="customer-order">
+                                <span class="material-symbols-outlined text-xs mr-2 text-green-500">circle</span>
+                                <span>Customer → Order</span>
+                                <span class="text-xs text-gray-500 ml-auto">1:M</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-missing cursor-pointer" onclick="selectObject('Order-Product', 'relationship')" data-name="order-product">
+                                <span class="material-symbols-outlined text-xs mr-2 text-red-500">remove_circle</span>
+                                <span>Order → Product</span>
+                                <span class="text-xs text-gray-500 ml-auto">M:M</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-missing cursor-pointer" onclick="selectObject('OrderItem-Product', 'relationship')" data-name="orderitem-product">
+                                <span class="material-symbols-outlined text-xs mr-2 text-red-500">remove_circle</span>
+                                <span>OrderItem → Product</span>
+                                <span class="text-xs text-gray-500 ml-auto">M:1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Indexes Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="indexes">
+                        <div class="flex items-center cursor-pointer" onclick="toggleTreeNode('rightIndexes')">
+                            <span class="material-symbols-outlined text-sm mr-1" id="rightIndexesIcon">expand_less</span>
+                            <span class="material-symbols-outlined text-sm mr-2 text-indigo-600">speed</span>
+                            <span class="font-medium">Indexes (5)</span>
+                        </div>
+                        <div id="rightIndexes" class="mt-1">
+                            <div class="tree-item level-2 py-1 diff-same cursor-pointer" onclick="selectObject('IDX_Customer_LastName', 'index')" data-name="idx_customer_lastname">
+                                <span class="material-symbols-outlined text-xs mr-2 text-green-500">circle</span>
+                                <span>IDX_Customer_LastName</span>
+                                <span class="text-xs text-gray-500 ml-auto">Index</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-conflict cursor-pointer" onclick="selectObject('IDX_Order_Date', 'index')" data-name="idx_order_date">
+                                <span class="material-symbols-outlined text-xs mr-2 text-yellow-500">warning</span>
+                                <span>IDX_Order_Date</span>
+                                <span class="text-xs text-gray-500 ml-auto">Index</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-added cursor-pointer" onclick="selectObject('IDX_Order_Status', 'index')" data-name="idx_order_status">
+                                <span class="material-symbols-outlined text-xs mr-2 text-gray-400">add_circle_outline</span>
+                                <span class="text-gray-400">IDX_Order_Status</span>
+                                <span class="text-xs text-gray-400 ml-auto">Missing</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-missing cursor-pointer" onclick="selectObject('IDX_Product_Category', 'index')" data-name="idx_product_category">
+                                <span class="material-symbols-outlined text-xs mr-2 text-red-500">remove_circle</span>
+                                <span>IDX_Product_Category</span>
+                                <span class="text-xs text-gray-500 ml-auto">Index</span>
+                            </div>
+                            <div class="tree-item level-2 py-1 diff-missing cursor-pointer" onclick="selectObject('IDX_OrderItem_OrderID', 'index')" data-name="idx_orderitem_orderid">
+                                <span class="material-symbols-outlined text-xs mr-2 text-red-500">remove_circle</span>
+                                <span>IDX_OrderItem_OrderID</span>
+                                <span class="text-xs text-gray-500 ml-auto">Index</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Property Pane (Bottom Dock) -->
+        <div id="propertyPane" class="h-64 bg-white border-t border-gray-200 overflow-y-auto">
+            <div class="p-4 border-b border-gray-200 bg-gray-50">
+                <h3 class="font-semibold text-gray-900" id="propertyTitle">Select an object to view properties</h3>
+                <p class="text-sm text-gray-600" id="propertySubtitle">Click on any object in the comparison grid above</p>
+            </div>
+            <div id="propertyContent" class="p-4">
+                <div class="text-center text-gray-500 py-8">
+                    <span class="material-symbols-outlined text-4xl mb-2 block">info</span>
+                    <p>Object properties and conflict resolution will appear here</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporting Slide-out Drawer -->
+    <div id="reportDrawer" class="fixed top-0 right-0 h-full w-96 bg-white border-l border-gray-200 shadow-lg slide-drawer z-50">
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="font-semibold text-gray-900">Comparison Report</h3>
+                <button onclick="toggleReportDrawer()" class="text-gray-400 hover:text-gray-600">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-4 space-y-6 overflow-y-auto" style="height: calc(100vh - 80px);">
+            <!-- Summary Counts -->
+            <div>
+                <h4 class="font-medium text-gray-900 mb-3">Summary</h4>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600">2</div>
+                            <div class="text-xs text-gray-500">Same</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-yellow-600">3</div>
+                            <div class="text-xs text-gray-500">Different</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-red-600">2</div>
+                            <div class="text-xs text-gray-500">Missing Left</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600">1</div>
+                            <div class="text-xs text-gray-500">Missing Right</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conflict Breakdown -->
+            <div>
+                <h4 class="font-medium text-gray-900 mb-3">Conflict Breakdown</h4>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span>Tables:</span>
+                        <span class="text-yellow-600">2 conflicts</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span>Relationships:</span>
+                        <span class="text-yellow-600">1 conflict</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span>Columns:</span>
+                        <span class="text-green-600">0 conflicts</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div>
+                <h4 class="font-medium text-gray-900 mb-3">Visual Breakdown</h4>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <canvas id="summaryChart" width="200" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Export Options -->
+            <div>
+                <h4 class="font-medium text-gray-900 mb-3">Export Options</h4>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Format:</label>
+                        <select class="w-full text-sm border border-gray-300 rounded px-3 py-2">
+                            <option>PDF Report</option>
+                            <option>Excel Spreadsheet</option>
+                            <option>HTML Report</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-2">Include:</label>
+                        <div class="space-y-1">
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                Summary counts
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                Detailed differences
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" class="mr-2">
+                                Resolution choices
+                            </label>
+                        </div>
+                    </div>
+                    <button class="w-full bg-blue-600 text-white py-2 px-4 rounded text-sm hover:bg-blue-700">
+                        Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentObject = null;
+
+        function startComparison() {
+            console.log('startComparison called');
+
+            // Validate selection
+            const leftModel = document.getElementById('leftModel').value;
+            const rightModel = document.getElementById('rightModel').value;
+
+            console.log('Left model:', leftModel);
+            console.log('Right model:', rightModel);
+
+            if (!leftModel || !rightModel) {
+                alert('Please select both source and target models');
+                return;
+            }
+
+            // Auto-suggest merge name
+            const mergeName = document.getElementById('mergeModelName');
+            if (!mergeName.value.trim()) {
+                mergeName.value = `${leftModel}_${rightModel}_merged`;
+            }
+
+            // Switch to comparison view
+            const modelSelection = document.getElementById('modelSelection');
+            const comparisonView = document.getElementById('comparisonView');
+
+            console.log('modelSelection element:', modelSelection);
+            console.log('comparisonView element:', comparisonView);
+
+            if (modelSelection && comparisonView) {
+                modelSelection.classList.add('hidden');
+                comparisonView.classList.remove('hidden');
+                console.log('Views switched successfully');
+
+                // Initialize the chart and count after switching views
+                setTimeout(() => {
+                    initializeChart();
+                    updateVisibleCount();
+                }, 100);
+            } else {
+                console.error('Could not find required elements');
+            }
+        }
+
+        function toggleTreeNode(nodeId) {
+            const node = document.getElementById(nodeId);
+            const icon = document.getElementById(nodeId + 'Icon');
+
+            if (node.style.display === 'none') {
+                node.style.display = 'block';
+                icon.textContent = 'expand_less';
+            } else {
+                node.style.display = 'none';
+                icon.textContent = 'expand_more';
+            }
+        }
+
+        function selectObject(objectName, objectType) {
+            currentObject = { name: objectName, type: objectType };
+
+            // Update property pane
+            document.getElementById('propertyTitle').textContent = `${objectType}: ${objectName}`;
+            document.getElementById('propertySubtitle').textContent = 'Detailed properties and conflict resolution';
+
+            // Show merge options in middle column
+            showMergeOptions(objectName, objectType);
+
+            // Show property details
+            showPropertyDetails(objectName, objectType);
+        }
+
+        function showMergeOptions(objectName, objectType) {
+            const mergeArea = document.getElementById('mergeArea');
+
+            if (objectName === 'Customer') {
+                // Identical - no merge needed
+                mergeArea.innerHTML = `
+                    <div class="text-center py-8">
+                        <span class="material-symbols-outlined text-4xl text-green-500 mb-2 block">check_circle</span>
+                        <h4 class="font-medium text-green-700">Identical</h4>
+                        <p class="text-sm text-gray-600">No conflicts to resolve</p>
+                    </div>
+                `;
+            } else if (objectName === 'Order') {
+                // Conflict - show resolution options
+                mergeArea.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="text-center py-4">
+                            <span class="material-symbols-outlined text-3xl text-yellow-500 mb-2 block">warning</span>
+                            <h4 class="font-medium text-yellow-700">Conflict Detected</h4>
+                            <p class="text-sm text-gray-600">Column count differs: Left(5) vs Right(6)</p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <button onclick="resolveConflict('Order', 'left')"
+                                    class="w-full bg-blue-100 text-blue-800 p-3 rounded hover:bg-blue-200 text-left">
+                                <div class="font-medium">⬅ Use Left Model</div>
+                                <div class="text-sm">Keep 5 columns from CustomerDB_v1.2</div>
+                            </button>
+
+                            <button onclick="resolveConflict('Order', 'right')"
+                                    class="w-full bg-green-100 text-green-800 p-3 rounded hover:bg-green-200 text-left">
+                                <div class="font-medium">Use Right Model ➡</div>
+                                <div class="text-sm">Keep 6 columns from CustomerDB_v1.3</div>
+                            </button>
+
+                            <button onclick="customMerge('Order')"
+                                    class="w-full bg-purple-100 text-purple-800 p-3 rounded hover:bg-purple-200 text-left">
+                                <div class="font-medium">📝 Custom Merge</div>
+                                <div class="text-sm">Manually select columns to include</div>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (objectName === 'Product') {
+                // Missing object - show add options
+                mergeArea.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="text-center py-4">
+                            <span class="material-symbols-outlined text-3xl text-red-500 mb-2 block">error</span>
+                            <h4 class="font-medium text-red-700">Missing Object</h4>
+                            <p class="text-sm text-gray-600">Present in Right model only</p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <button onclick="addObject('Product', 'merge')"
+                                    class="w-full bg-green-100 text-green-800 p-3 rounded hover:bg-green-200 text-left">
+                                <div class="font-medium">➕ Add to Merge</div>
+                                <div class="text-sm">Include Product table in merged model</div>
+                            </button>
+
+                            <button onclick="excludeObject('Product')"
+                                    class="w-full bg-gray-100 text-gray-700 p-3 rounded hover:bg-gray-200 text-left">
+                                <div class="font-medium">⊘ Exclude</div>
+                                <div class="text-sm">Do not include in merged model</div>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Comprehensive sample data
+        const sampleData = {
+            'Customer': {
+                type: 'table',
+                left: {
+                    columns: [
+                        { name: 'CustomerID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'FirstName', dataType: 'VARCHAR(50)', constraints: '', nullable: false },
+                        { name: 'LastName', dataType: 'VARCHAR(50)', constraints: '', nullable: false },
+                        { name: 'Email', dataType: 'VARCHAR(100)', constraints: 'UK', nullable: false }
+                    ]
+                },
+                right: {
+                    columns: [
+                        { name: 'CustomerID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'FirstName', dataType: 'VARCHAR(50)', constraints: '', nullable: false },
+                        { name: 'LastName', dataType: 'VARCHAR(50)', constraints: '', nullable: false },
+                        { name: 'Email', dataType: 'VARCHAR(100)', constraints: 'UK', nullable: false }
+                    ]
+                }
+            },
+            'Order': {
+                type: 'table',
+                left: {
+                    columns: [
+                        { name: 'OrderID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'CustomerID', dataType: 'INT', constraints: 'FK', nullable: false },
+                        { name: 'OrderTotal', dataType: 'DECIMAL(10,2)', constraints: '', nullable: false },
+                        { name: 'Status', dataType: 'VARCHAR(20)', constraints: '', nullable: false },
+                        { name: 'CreatedAt', dataType: 'DATETIME', constraints: '', nullable: false }
+                    ]
+                },
+                right: {
+                    columns: [
+                        { name: 'OrderID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'CustomerID', dataType: 'INT', constraints: 'FK', nullable: false },
+                        { name: 'OrderDate', dataType: 'DATE', constraints: '', nullable: false, isNew: true },
+                        { name: 'OrderTotal', dataType: 'DECIMAL(12,2)', constraints: '', nullable: false, isModified: true },
+                        { name: 'Status', dataType: 'VARCHAR(30)', constraints: '', nullable: false, isModified: true },
+                        { name: 'CreatedAt', dataType: 'DATETIME', constraints: '', nullable: false }
+                    ]
+                }
+            },
+            'OrderItem': {
+                type: 'table',
+                left: {
+                    columns: [
+                        { name: 'OrderItemID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'OrderID', dataType: 'INT', constraints: 'FK', nullable: false },
+                        { name: 'ProductID', dataType: 'INT', constraints: 'FK', nullable: false },
+                        { name: 'Quantity', dataType: 'INT', constraints: '', nullable: false }
+                    ]
+                },
+                right: {
+                    columns: [
+                        { name: 'OrderItemID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'OrderID', dataType: 'INT', constraints: 'FK', nullable: false },
+                        { name: 'ProductID', dataType: 'INT', constraints: 'FK', nullable: false },
+                        { name: 'Quantity', dataType: 'INT', constraints: '', nullable: false },
+                        { name: 'UnitPrice', dataType: 'DECIMAL(10,2)', constraints: '', nullable: false, isNew: true }
+                    ]
+                }
+            },
+            'Product': {
+                type: 'table',
+                left: null,
+                right: {
+                    columns: [
+                        { name: 'ProductID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'ProductName', dataType: 'VARCHAR(100)', constraints: '', nullable: false },
+                        { name: 'Category', dataType: 'VARCHAR(50)', constraints: '', nullable: true },
+                        { name: 'Price', dataType: 'DECIMAL(10,2)', constraints: '', nullable: false },
+                        { name: 'InStock', dataType: 'BIT', constraints: '', nullable: false }
+                    ]
+                }
+            },
+            'CustomerOrders': {
+                type: 'view',
+                left: { definition: 'SELECT c.CustomerID, c.FirstName, c.LastName, COUNT(o.OrderID) as OrderCount FROM Customer c LEFT JOIN Order o ON c.CustomerID = o.CustomerID GROUP BY c.CustomerID' },
+                right: { definition: 'SELECT c.CustomerID, c.FirstName, c.LastName, COUNT(o.OrderID) as OrderCount FROM Customer c LEFT JOIN Order o ON c.CustomerID = o.CustomerID GROUP BY c.CustomerID' }
+            },
+            'OrderSummary': {
+                type: 'view',
+                left: { definition: 'SELECT OrderID, CustomerID, OrderTotal, Status FROM Order WHERE Status = \'Active\'' },
+                right: { definition: 'SELECT OrderID, CustomerID, OrderDate, OrderTotal, Status FROM Order WHERE Status IN (\'Active\', \'Pending\')', isModified: true }
+            },
+            'PK_Customer': {
+                type: 'key',
+                left: { keyType: 'Primary Key', table: 'Customer', columns: ['CustomerID'] },
+                right: { keyType: 'Primary Key', table: 'Customer', columns: ['CustomerID'] }
+            },
+            'FK_Order_Customer': {
+                type: 'key',
+                left: { keyType: 'Foreign Key', table: 'Order', columns: ['CustomerID'], references: 'Customer(CustomerID)', onDelete: 'CASCADE' },
+                right: { keyType: 'Foreign Key', table: 'Order', columns: ['CustomerID'], references: 'Customer(CustomerID)', onDelete: 'RESTRICT', isModified: true }
+            },
+            'IDX_Order_Date': {
+                type: 'index',
+                left: { indexType: 'Non-Clustered', table: 'Order', columns: ['CreatedAt'], isUnique: false },
+                right: { indexType: 'Non-Clustered', table: 'Order', columns: ['OrderDate', 'CreatedAt'], isUnique: false, isModified: true }
+            }
+        };
+
+        function showPropertyDetails(objectName, objectType) {
+            const propertyContent = document.getElementById('propertyContent');
+            const data = sampleData[objectName];
+
+            if (!data) {
+                propertyContent.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <span class="material-symbols-outlined text-4xl mb-2 block">info</span>
+                        <p>No detailed properties available for ${objectName}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (data.type === 'table') {
+                propertyContent.innerHTML = generateTableProperties(objectName, data);
+            } else if (data.type === 'view') {
+                propertyContent.innerHTML = generateViewProperties(objectName, data);
+            } else if (data.type === 'key') {
+                propertyContent.innerHTML = generateKeyProperties(objectName, data);
+            } else if (data.type === 'index') {
+                propertyContent.innerHTML = generateIndexProperties(objectName, data);
+            }
+        }
+
+        function generateTableProperties(objectName, data) {
+            const leftCols = data.left ? data.left.columns.length : 0;
+            const rightCols = data.right ? data.right.columns.length : 0;
+
+            let leftContent = data.left ? `
+                <h5 class="font-medium text-blue-700 mb-2">Left Model (${leftCols} columns)</h5>
+                <div class="space-y-1 text-sm max-h-48 overflow-y-auto">
+                    ${data.left.columns.map(col => `
+                        <div class="flex justify-between py-1 border-b border-gray-100">
+                            <span class="font-medium">${col.name}</span>
+                            <div class="text-right">
+                                <div class="text-gray-600">${col.dataType}</div>
+                                <div class="text-xs text-gray-500">${col.constraints} ${col.nullable ? '' : 'NOT NULL'}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<div class="text-center text-gray-400 py-8">Not present in Left Model</div>';
+
+            let rightContent = data.right ? `
+                <h5 class="font-medium text-green-700 mb-2">Right Model (${rightCols} columns)</h5>
+                <div class="space-y-1 text-sm max-h-48 overflow-y-auto">
+                    ${data.right.columns.map(col => `
+                        <div class="flex justify-between py-1 border-b border-gray-100 ${col.isNew ? 'bg-green-50' : col.isModified ? 'bg-yellow-50' : ''}">
+                            <span class="font-medium">${col.name}</span>
+                            <div class="text-right">
+                                <div class="text-gray-600">${col.dataType}</div>
+                                <div class="text-xs ${col.isNew ? 'text-green-600' : col.isModified ? 'text-yellow-600' : 'text-gray-500'}">
+                                    ${col.constraints} ${col.nullable ? '' : 'NOT NULL'}
+                                    ${col.isNew ? ' NEW' : col.isModified ? ' MODIFIED' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<div class="text-center text-gray-400 py-8">Not present in Right Model</div>';
+
+            return `
+                <div class="grid grid-cols-3 gap-4 h-full">
+                    <div>${leftContent}</div>
+                    <div>
+                        <h5 class="font-medium text-purple-700 mb-2">Merge Resolution</h5>
+                        <div class="space-y-2">
+                            ${leftCols > 0 && rightCols > 0 ? `
+                                <select class="w-full text-sm border border-gray-300 rounded px-2 py-1">
+                                    <option>Use Left Model (${leftCols} cols)</option>
+                                    <option>Use Right Model (${rightCols} cols)</option>
+                                    <option>Custom Merge...</option>
+                                </select>
+                                <button class="w-full bg-purple-100 text-purple-800 py-1 px-2 rounded text-xs hover:bg-purple-200">
+                                    Preview Merge
+                                </button>
+                            ` : `
+                                <button class="w-full bg-green-100 text-green-800 py-1 px-2 rounded text-xs hover:bg-green-200">
+                                    ${data.left ? 'Keep in Left' : 'Add to Left'}
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                    <div>${rightContent}</div>
+                </div>
+            `;
+        }
+
+        function generateViewProperties(objectName, data) {
+            return `
+                <div class="grid grid-cols-3 gap-4 h-full">
+                    <div>
+                        <h5 class="font-medium text-blue-700 mb-2">Left Model Definition</h5>
+                        <div class="bg-gray-50 p-3 rounded text-xs font-mono overflow-auto max-h-32">
+                            ${data.left ? data.left.definition : 'Not present'}
+                        </div>
+                    </div>
+                    <div>
+                        <h5 class="font-medium text-purple-700 mb-2">Merge Resolution</h5>
+                        <select class="w-full text-sm border border-gray-300 rounded px-2 py-1 mb-2">
+                            <option>Use Left Definition</option>
+                            <option>Use Right Definition</option>
+                            <option>Custom Definition...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <h5 class="font-medium text-green-700 mb-2">Right Model Definition</h5>
+                        <div class="bg-gray-50 p-3 rounded text-xs font-mono overflow-auto max-h-32 ${data.right?.isModified ? 'bg-yellow-50' : ''}">
+                            ${data.right ? data.right.definition : 'Not present'}
+                            ${data.right?.isModified ? '<div class="text-yellow-600 mt-2">MODIFIED</div>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateKeyProperties(objectName, data) {
+            return `
+                <div class="grid grid-cols-3 gap-4 h-full">
+                    <div>
+                        <h5 class="font-medium text-blue-700 mb-2">Left Model</h5>
+                        ${data.left ? `
+                            <div class="space-y-2 text-sm">
+                                <div><strong>Type:</strong> ${data.left.keyType}</div>
+                                <div><strong>Table:</strong> ${data.left.table}</div>
+                                <div><strong>Columns:</strong> ${data.left.columns.join(', ')}</div>
+                                ${data.left.references ? `<div><strong>References:</strong> ${data.left.references}</div>` : ''}
+                                ${data.left.onDelete ? `<div><strong>On Delete:</strong> ${data.left.onDelete}</div>` : ''}
+                            </div>
+                        ` : '<div class="text-gray-400">Not present</div>'}
+                    </div>
+                    <div>
+                        <h5 class="font-medium text-purple-700 mb-2">Merge Resolution</h5>
+                        <select class="w-full text-sm border border-gray-300 rounded px-2 py-1">
+                            <option>Use Left Configuration</option>
+                            <option>Use Right Configuration</option>
+                            <option>Custom Configuration...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <h5 class="font-medium text-green-700 mb-2">Right Model</h5>
+                        ${data.right ? `
+                            <div class="space-y-2 text-sm ${data.right.isModified ? 'bg-yellow-50 p-2 rounded' : ''}">
+                                <div><strong>Type:</strong> ${data.right.keyType}</div>
+                                <div><strong>Table:</strong> ${data.right.table}</div>
+                                <div><strong>Columns:</strong> ${data.right.columns.join(', ')}</div>
+                                ${data.right.references ? `<div><strong>References:</strong> ${data.right.references}</div>` : ''}
+                                ${data.right.onDelete ? `<div><strong>On Delete:</strong> ${data.right.onDelete} ${data.right.isModified ? '<span class="text-yellow-600">CHANGED</span>' : ''}</div>` : ''}
+                            </div>
+                        ` : '<div class="text-gray-400">Not present</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateIndexProperties(objectName, data) {
+            return `
+                <div class="grid grid-cols-3 gap-4 h-full">
+                    <div>
+                        <h5 class="font-medium text-blue-700 mb-2">Left Model</h5>
+                        ${data.left ? `
+                            <div class="space-y-2 text-sm">
+                                <div><strong>Type:</strong> ${data.left.indexType}</div>
+                                <div><strong>Table:</strong> ${data.left.table}</div>
+                                <div><strong>Columns:</strong> ${data.left.columns.join(', ')}</div>
+                                <div><strong>Unique:</strong> ${data.left.isUnique ? 'Yes' : 'No'}</div>
+                            </div>
+                        ` : '<div class="text-gray-400">Not present</div>'}
+                    </div>
+                    <div>
+                        <h5 class="font-medium text-purple-700 mb-2">Merge Resolution</h5>
+                        <select class="w-full text-sm border border-gray-300 rounded px-2 py-1">
+                            <option>Use Left Configuration</option>
+                            <option>Use Right Configuration</option>
+                            <option>Create Combined Index</option>
+                        </select>
+                    </div>
+                    <div>
+                        <h5 class="font-medium text-green-700 mb-2">Right Model</h5>
+                        ${data.right ? `
+                            <div class="space-y-2 text-sm ${data.right.isModified ? 'bg-yellow-50 p-2 rounded' : ''}">
+                                <div><strong>Type:</strong> ${data.right.indexType}</div>
+                                <div><strong>Table:</strong> ${data.right.table}</div>
+                                <div><strong>Columns:</strong> ${data.right.columns.join(', ')} ${data.right.isModified ? '<span class="text-yellow-600">MODIFIED</span>' : ''}</div>
+                                <div><strong>Unique:</strong> ${data.right.isUnique ? 'Yes' : 'No'}</div>
+                            </div>
+                        ` : '<div class="text-gray-400">Not present</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function resolveConflict(objectName, choice) {
+            conflicts.pending--;
+            conflicts.resolved++;
+            updateConflictStatus();
+
+            // Update merge preview
+            const mergeArea = document.getElementById('mergeArea');
+            mergeArea.innerHTML = `
+                <div class="text-center py-8">
+                    <span class="material-symbols-outlined text-4xl text-green-500 mb-2 block">check_circle</span>
+                    <h4 class="font-medium text-green-700">Resolved</h4>
+                    <p class="text-sm text-gray-600">Using ${choice === 'left' ? 'Left' : 'Right'} Model</p>
+                </div>
+            `;
+
+            alert(`Conflict resolved: Using ${choice} model for ${objectName}`);
+        }
+
+        function addObject(objectName, action) {
+            conflicts.pending--;
+            conflicts.resolved++;
+            updateConflictStatus();
+
+            alert(`${objectName} will be ${action === 'merge' ? 'added to' : 'excluded from'} merged model`);
+        }
+
+        function excludeObject(objectName) {
+            addObject(objectName, 'exclude');
+        }
+
+        function customMerge(objectName) {
+            alert(`Opening custom merge editor for ${objectName}`);
+        }
+
+        function updateConflictStatus() {
+            document.getElementById('pendingBtn').innerHTML = `Pending (${conflicts.pending})`;
+            document.getElementById('resolvedBtn').innerHTML = `Resolved (${conflicts.resolved})`;
+
+            if (conflicts.pending === 0) {
+                document.getElementById('pendingBtn').className = 'bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs';
+                document.getElementById('resolvedBtn').className = 'bg-green-100 text-green-800 px-2 py-1 rounded text-xs';
+            }
+        }
+
+        function toggleConflictFilter(type) {
+            // Filter logic would go here
+            console.log(`Filtering by: ${type}`);
+        }
+
+        function acceptAllLeft() {
+            if (confirm('Accept all changes from Left Model?')) {
+                conflicts.resolved += conflicts.pending;
+                conflicts.pending = 0;
+                updateConflictStatus();
+                alert('All conflicts resolved using Left Model');
+            }
+        }
+
+        function acceptAllRight() {
+            if (confirm('Accept all changes from Right Model?')) {
+                conflicts.resolved += conflicts.pending;
+                conflicts.pending = 0;
+                updateConflictStatus();
+                alert('All conflicts resolved using Right Model');
+            }
+        }
+
+        function autoMerge() {
+            if (confirm('Auto-merge compatible changes?')) {
+                alert('Auto-merge completed for 2 compatible objects');
+            }
+        }
+
+        function toggleReportDrawer() {
+            const drawer = document.getElementById('reportDrawer');
+            drawer.classList.toggle('open');
+
+            if (drawer.classList.contains('open')) {
+                initializeChart();
+            }
+        }
+
+        function initializeChart() {
+            const ctx = document.getElementById('summaryChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Same', 'Different', 'Missing Left', 'Missing Right'],
+                    datasets: [{
+                        data: [2, 3, 2, 1],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // Filter functionality
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchFilter').value.toLowerCase();
+            const showTables = document.getElementById('filterTables').checked;
+            const showViews = document.getElementById('filterViews').checked;
+            const showKeys = document.getElementById('filterKeys').checked;
+            const showRelationships = document.getElementById('filterRelationships').checked;
+            const showIndexes = document.getElementById('filterIndexes').checked;
+
+            // Get display mode
+            const displayMode = document.querySelector('input[name="displayMode"]:checked')?.value || 'all';
+
+            // Filter left tree
+            filterTree('leftTree', searchTerm, {
+                tables: showTables,
+                views: showViews,
+                keys: showKeys,
+                relationships: showRelationships,
+                indexes: showIndexes
+            }, displayMode);
+
+            // Filter right tree
+            filterTree('rightTree', searchTerm, {
+                tables: showTables,
+                views: showViews,
+                keys: showKeys,
+                relationships: showRelationships,
+                indexes: showIndexes
+            }, displayMode);
+
+            // Update visible count after filtering
+            setTimeout(updateVisibleCount, 50);
+        }
+
+        function applyDisplayMode() {
+            // Re-apply all filters when display mode changes
+            applyFilters();
+        }
+
+        function updateVisibleCount() {
+            const leftTree = document.getElementById('leftTree');
+            const rightTree = document.getElementById('rightTree');
+
+            const leftVisible = leftTree.querySelectorAll('.tree-item.level-2:not([style*="display: none"])').length;
+            const rightVisible = rightTree.querySelectorAll('.tree-item.level-2:not([style*="display: none"])').length;
+
+            // Get display mode for better messaging
+            const displayMode = document.querySelector('input[name="displayMode"]:checked')?.value || 'all';
+            const displayModeText = {
+                'all': 'all objects',
+                'differences': 'differences only',
+                'conflicts': 'conflicts only',
+                'missing': 'missing objects only'
+            };
+
+            const countElement = document.getElementById('visibleCount');
+            if (countElement) {
+                countElement.textContent = `Showing ${leftVisible} ${displayModeText[displayMode]}`;
+            }
+        }
+
+        function filterTree(treeId, searchTerm, filters, displayMode) {
+            const tree = document.getElementById(treeId);
+            const groups = tree.querySelectorAll('.filter-group');
+
+            groups.forEach(group => {
+                const type = group.dataset.type;
+                const shouldShowType = filters[type];
+
+                if (!shouldShowType) {
+                    group.style.display = 'none';
+                    return;
+                }
+
+                let hasVisibleItems = false;
+                const items = group.querySelectorAll('.tree-item.level-2');
+
+                items.forEach(item => {
+                    const itemName = item.dataset.name;
+                    const itemText = item.textContent.toLowerCase();
+
+                    // Check if item matches search term
+                    const matchesSearch = searchTerm === '' || itemText.includes(searchTerm) || itemName.includes(searchTerm);
+
+                    // Check if item matches display mode
+                    const matchesDisplayMode = shouldShowByDisplayMode(item, displayMode);
+
+                    if (matchesSearch && matchesDisplayMode) {
+                        item.style.display = 'block';
+                        hasVisibleItems = true;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                // Show/hide the group based on whether it has visible items
+                group.style.display = hasVisibleItems ? 'block' : 'none';
+            });
+        }
+
+        function shouldShowByDisplayMode(item, displayMode) {
+            const hasConflictClass = item.classList.contains('diff-conflict');
+            const hasMissingClass = item.classList.contains('diff-missing');
+            const hasAddedClass = item.classList.contains('diff-added');
+            const hasSameClass = item.classList.contains('diff-same');
+
+            switch (displayMode) {
+                case 'all':
+                    return true;
+                case 'differences':
+                    return hasConflictClass || hasMissingClass || hasAddedClass;
+                case 'conflicts':
+                    return hasConflictClass;
+                case 'missing':
+                    return hasMissingClass || hasAddedClass;
+                default:
+                    return true;
+            }
+        }
+
+        // Enhanced conflict tracking with more realistic numbers
+        let conflicts = {
+            pending: 8,  // Updated to reflect all the conflicts in our sample data
+            resolved: 0
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateConflictStatus();
+
+            // Update conflict count based on sample data
+            document.getElementById('conflictCount').textContent = conflicts.pending;
+            document.getElementById('missingCount').textContent = '6';
+            document.getElementById('identicalCount').textContent = '4';
+        });
+    </script>
+</body>
+</html>
