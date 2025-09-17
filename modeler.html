@@ -414,10 +414,23 @@
             </div>
             <div class="h-8 w-px bg-gray-300"></div>
             <div class="flex items-center space-x-2">
-                <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
-                    <span class="material-symbols-outlined text-sm">compare</span>
-                    <span class="text-[10px]">Compare</span>
-                </button>
+                <div class="relative">
+                    <button onclick="toggleCompareMenu()" class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded" id="compareMenuButton">
+                        <span class="material-symbols-outlined text-sm">compare</span>
+                        <span class="text-[10px]">Compare</span>
+                    </button>
+                    <!-- Compare Submenu -->
+                    <div id="compareSubmenu" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 hidden min-w-32">
+                        <button onclick="quickCompare()" class="w-full px-3 py-2 text-xs text-left hover:bg-gray-100 flex items-center">
+                            <span class="material-symbols-outlined text-sm mr-2">compare</span>
+                            Quick Compare
+                        </button>
+                        <button onclick="toggleCompleteCompare()" class="w-full px-3 py-2 text-xs text-left hover:bg-gray-100 flex items-center" id="toolsCompleteCompare">
+                            <span class="material-symbols-outlined text-sm mr-2">compare_arrows</span>
+                            Complete Compare
+                        </button>
+                    </div>
+                </div>
                 <button class="ribbon-option flex flex-col items-center p-0.5 hover:bg-gray-100 rounded">
                     <span class="material-symbols-outlined text-sm">merge</span>
                     <span class="text-[10px]">Merge</span>
@@ -522,7 +535,7 @@
                 <button onclick="toggleReverseEngineering()" class="p-3 text-gray-600 hover:text-indigo-600 hover:bg-gray-200 rounded-lg" title="Reverse Engineering" id="mainMenuRE">
                     <span class="material-symbols-outlined">upload_file</span>
                 </button>
-                <button class="p-3 text-gray-600 hover:text-indigo-600 hover:bg-gray-200 rounded-lg" title="Compare Models">
+                <button onclick="toggleCompleteCompare()" class="p-3 text-gray-600 hover:text-indigo-600 hover:bg-gray-200 rounded-lg" title="Complete Compare" id="mainMenuCompare">
                     <span class="material-symbols-outlined">compare_arrows</span>
                 </button>
                 <a href="users.html" class="p-3 text-gray-600 hover:text-indigo-600 hover:bg-gray-200 rounded-lg" title="Users">
@@ -1219,6 +1232,651 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Complete Compare Mode Canvas -->
+            <div class="flex-1 bg-white overflow-y-auto hidden" id="completeCompareCanvas">
+                <div class="max-w-6xl mx-auto p-8">
+                    <!-- Header -->
+                    <div class="text-center mb-8">
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2">Complete Compare</h1>
+                        <p class="text-gray-600">Compare models and analyze differences comprehensively</p>
+                    </div>
+
+                    <!-- Complete Compare Flow -->
+                    <div class="space-y-6">
+                        <!-- 1. Select Source & Target -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <div class="p-4 border-b border-gray-200 cursor-pointer" onclick="toggleSection('sourceTarget')">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                                        <span class="material-symbols-outlined text-lg mr-3 text-indigo-600">input</span>
+                                        Select Source & Target
+                                    </h3>
+                                    <span class="material-symbols-outlined text-lg text-gray-400" id="sourceTargetIcon">expand_more</span>
+                                </div>
+                            </div>
+                            <div id="sourceTargetContent" class="p-4 space-y-6">
+                                <div class="grid grid-cols-2 gap-8">
+                                    <!-- Source Model -->
+                                    <div class="space-y-4">
+                                        <h4 class="text-base font-medium text-gray-900 flex items-center">
+                                            <span class="material-symbols-outlined text-base mr-2 text-blue-600">source</span>
+                                            Source Model
+                                        </h4>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Source Type</label>
+                                            <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" onchange="updateSourceOptions(this.value)">
+                                                <option value="">Select source...</option>
+                                                <option value="local">Open Model (Local)</option>
+                                                <option value="repository">Mart Repository</option>
+                                                <option value="cloud">Cloud Repo (GitHub)</option>
+                                                <option value="database">Database (via RE)</option>
+                                            </select>
+                                        </div>
+                                        <div id="sourceDetails" class="space-y-3">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Select File/Database</label>
+                                                <input type="text" placeholder="Browse or enter path..." class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Target Model -->
+                                    <div class="space-y-4">
+                                        <h4 class="text-base font-medium text-gray-900 flex items-center">
+                                            <span class="material-symbols-outlined text-base mr-2 text-green-600">target</span>
+                                            Target Model
+                                        </h4>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Target Type</label>
+                                            <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" onchange="updateTargetOptions(this.value)">
+                                                <option value="">Select target...</option>
+                                                <option value="local">Open Model (Local)</option>
+                                                <option value="repository">Mart Repository</option>
+                                                <option value="cloud">Cloud Repo (GitHub)</option>
+                                                <option value="database">Database (via RE)</option>
+                                            </select>
+                                        </div>
+                                        <div id="targetDetails" class="space-y-3">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Select File/Database</label>
+                                                <input type="text" placeholder="Browse or enter path..." class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Swap Button -->
+                                <div class="flex justify-center">
+                                    <button onclick="swapSourceTarget()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex items-center">
+                                        <span class="material-symbols-outlined text-base mr-2">swap_horiz</span>
+                                        Swap Source ↔ Target
+                                    </button>
+                                </div>
+
+                                <!-- Validation Status -->
+                                <div id="validationStatus" class="hidden p-3 rounded-md">
+                                    <div class="flex items-center text-sm">
+                                        <span class="material-symbols-outlined text-base mr-2">check_circle</span>
+                                        <span>Both source and target selected. Ready to compare!</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Compare Scope -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <div class="p-4 border-b border-gray-200 cursor-pointer" onclick="toggleSection('compareScope')">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                                        <span class="material-symbols-outlined text-lg mr-3 text-indigo-600">checklist</span>
+                                        Compare Scope
+                                    </h3>
+                                    <span class="material-symbols-outlined text-lg text-gray-400" id="compareScopeIcon">expand_more</span>
+                                </div>
+                            </div>
+                            <div id="compareScopeContent" class="p-4 space-y-6 hidden">
+                                <div class="grid grid-cols-2 gap-8">
+                                    <!-- Object Types -->
+                                    <div>
+                                        <h4 class="text-base font-medium text-gray-900 mb-4">Object Types</h4>
+                                        <div class="space-y-2">
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3" checked>
+                                                <span class="text-sm">Tables / Entities</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3" checked>
+                                                <span class="text-sm">Columns / Attributes</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3" checked>
+                                                <span class="text-sm">Keys (PK, FK, Unique, Alternate)</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3" checked>
+                                                <span class="text-sm">Relationships</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3">
+                                                <span class="text-sm">Views</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3">
+                                                <span class="text-sm">Indexes</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3">
+                                                <span class="text-sm">Procedures / Functions</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3">
+                                                <span class="text-sm">Domains / User-defined datatypes</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3">
+                                                <span class="text-sm">Business Rules / Constraints</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-3">
+                                                <span class="text-sm">Notes / Annotations</span>
+                                            </label>
+                                        </div>
+                                        <div class="flex gap-3 mt-4">
+                                            <button onclick="selectAllCompareObjects()" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">Select All</button>
+                                            <button onclick="deselectAllCompareObjects()" class="text-sm text-gray-600 hover:text-gray-700 font-medium">Deselect All</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Filters -->
+                                    <div>
+                                        <h4 class="text-base font-medium text-gray-900 mb-4">Filters</h4>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Schema Filter</label>
+                                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                                    <option value="">All schemas</option>
+                                                    <option value="dbo">dbo</option>
+                                                    <option value="public">public</option>
+                                                    <option value="main">main</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Name/Pattern Filter</label>
+                                                <input type="text" placeholder="e.g., tbl_* or ^Customer.*" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                                <p class="text-xs text-gray-500 mt-1">Use wildcards or regex patterns</p>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Include/Exclude Objects</label>
+                                                <div class="border border-gray-200 rounded-md max-h-32 overflow-y-auto p-2">
+                                                    <div class="space-y-1">
+                                                        <label class="flex items-center text-sm">
+                                                            <input type="checkbox" class="mr-2" checked>
+                                                            <span>Customers</span>
+                                                        </label>
+                                                        <label class="flex items-center text-sm">
+                                                            <input type="checkbox" class="mr-2" checked>
+                                                            <span>Orders</span>
+                                                        </label>
+                                                        <label class="flex items-center text-sm">
+                                                            <input type="checkbox" class="mr-2" checked>
+                                                            <span>Products</span>
+                                                        </label>
+                                                        <label class="flex items-center text-sm">
+                                                            <input type="checkbox" class="mr-2">
+                                                            <span>TempTable</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Compare Rules -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <div class="p-4 border-b border-gray-200 cursor-pointer" onclick="toggleSection('compareRules')">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                                        <span class="material-symbols-outlined text-lg mr-3 text-indigo-600">rule</span>
+                                        Compare Rules
+                                    </h3>
+                                    <span class="material-symbols-outlined text-lg text-gray-400" id="compareRulesIcon">expand_more</span>
+                                </div>
+                            </div>
+                            <div id="compareRulesContent" class="p-4 space-y-6 hidden">
+                                <div class="grid grid-cols-2 gap-8">
+                                    <div class="space-y-4">
+                                        <h4 class="text-base font-medium text-gray-900">Comparison Options</h4>
+                                        <div class="space-y-3">
+                                            <div class="flex items-center justify-between">
+                                                <label class="text-sm font-medium text-gray-700">Case sensitivity</label>
+                                                <label class="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" class="sr-only peer">
+                                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                                </label>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <input type="checkbox" class="mr-3" checked>
+                                                <label class="text-sm text-gray-700">Treat NULL vs NOT NULL as difference</label>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <input type="checkbox" class="mr-3" checked>
+                                                <label class="text-sm text-gray-700">Treat datatype precision/scale changes as difference</label>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <input type="checkbox" class="mr-3">
+                                                <label class="text-sm text-gray-700">Ignore whitespace/comments for procedures/functions</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <h4 class="text-base font-medium text-gray-900">Advanced Settings</h4>
+                                        <div class="space-y-3">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Naming standards enforcement</label>
+                                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                                    <option value="none">None</option>
+                                                    <option value="strict">Strict</option>
+                                                    <option value="loose">Loose</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Mapping rules</label>
+                                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                                    <option value="name">Auto map by Name</option>
+                                                    <option value="uid">Auto map by UID</option>
+                                                    <option value="custom">Custom mapping</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Comparison Results -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <div class="p-4 border-b border-gray-200 cursor-pointer" onclick="toggleSection('comparisonResults')">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                                        <span class="material-symbols-outlined text-lg mr-3 text-indigo-600">analytics</span>
+                                        Comparison Results
+                                    </h3>
+                                    <span class="material-symbols-outlined text-lg text-gray-400" id="comparisonResultsIcon">expand_more</span>
+                                </div>
+                            </div>
+                            <div id="comparisonResultsContent" class="p-4 space-y-4 hidden">
+                                <!-- Summary Panel -->
+                                <div class="bg-gray-50 border border-gray-200 rounded-md p-4">
+                                    <h4 class="text-base font-medium text-gray-900 mb-3">Comparison Summary</h4>
+                                    <div class="grid grid-cols-4 gap-4 text-center">
+                                        <div class="bg-green-50 border border-green-200 rounded p-3">
+                                            <div class="text-lg font-bold text-green-700">12</div>
+                                            <div class="text-xs text-green-600">Added</div>
+                                        </div>
+                                        <div class="bg-red-50 border border-red-200 rounded p-3">
+                                            <div class="text-lg font-bold text-red-700">3</div>
+                                            <div class="text-xs text-red-600">Deleted</div>
+                                        </div>
+                                        <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+                                            <div class="text-lg font-bold text-yellow-700">8</div>
+                                            <div class="text-xs text-yellow-600">Modified</div>
+                                        </div>
+                                        <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                                            <div class="text-lg font-bold text-blue-700">23</div>
+                                            <div class="text-xs text-blue-600">Total Changes</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Side-by-side Comparison -->
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <!-- Source -->
+                                        <div class="border border-gray-200 rounded-md">
+                                            <div class="bg-blue-50 px-4 py-2 border-b border-gray-200">
+                                                <h5 class="font-medium text-blue-900">Source Model (v1.2.0)</h5>
+                                                <p class="text-xs text-blue-700">E-Commerce Database Schema</p>
+                                            </div>
+                                            <div class="p-4 max-h-96 overflow-y-auto">
+                                                <div class="space-y-2">
+                                                    <!-- Unchanged tables -->
+                                                    <div class="flex items-center p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100" onclick="toggleObjectDetails('customers-details')">
+                                                        <span class="material-symbols-outlined text-sm mr-2">table_chart</span>
+                                                        <span class="text-sm flex-1">Customers</span>
+                                                        <span class="text-xs text-gray-500">12 columns</span>
+                                                    </div>
+
+                                                    <!-- Added table -->
+                                                    <div class="flex items-center p-2 bg-green-50 rounded border border-green-200 cursor-pointer hover:bg-green-100" onclick="toggleObjectDetails('orders-details')">
+                                                        <span class="material-symbols-outlined text-sm mr-2 text-green-600">add</span>
+                                                        <span class="text-sm flex-1">Orders</span>
+                                                        <span class="text-xs text-green-600">8 columns</span>
+                                                    </div>
+
+                                                    <!-- Modified table -->
+                                                    <div class="flex items-center p-2 bg-yellow-50 rounded border border-yellow-200 cursor-pointer hover:bg-yellow-100" onclick="toggleObjectDetails('products-details')">
+                                                        <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">edit</span>
+                                                        <span class="text-sm flex-1">Products</span>
+                                                        <span class="text-xs text-yellow-600">9 columns</span>
+                                                    </div>
+
+                                                    <div class="flex items-center p-2 bg-gray-50 rounded">
+                                                        <span class="material-symbols-outlined text-sm mr-2">table_chart</span>
+                                                        <span class="text-sm flex-1">Categories</span>
+                                                        <span class="text-xs text-gray-500">4 columns</span>
+                                                    </div>
+
+                                                    <!-- Deleted table -->
+                                                    <div class="flex items-center p-2 bg-red-50 rounded border border-red-200">
+                                                        <span class="material-symbols-outlined text-sm mr-2 text-red-600">remove</span>
+                                                        <span class="text-sm flex-1 line-through">OrderDetails</span>
+                                                        <span class="text-xs text-red-600">5 columns</span>
+                                                    </div>
+
+                                                    <div class="flex items-center p-2 bg-gray-50 rounded">
+                                                        <span class="material-symbols-outlined text-sm mr-2">table_chart</span>
+                                                        <span class="text-sm flex-1">Suppliers</span>
+                                                        <span class="text-xs text-gray-500">7 columns</span>
+                                                    </div>
+
+                                                    <!-- Added view -->
+                                                    <div class="flex items-center p-2 bg-green-50 rounded border border-green-200">
+                                                        <span class="material-symbols-outlined text-sm mr-2 text-green-600">add</span>
+                                                        <span class="text-sm flex-1">vw_CustomerOrders</span>
+                                                        <span class="text-xs text-green-600">View</span>
+                                                    </div>
+
+                                                    <!-- Modified relationship -->
+                                                    <div class="flex items-center p-2 bg-yellow-50 rounded border border-yellow-200">
+                                                        <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">edit</span>
+                                                        <span class="text-sm flex-1">FK_Orders_Customers</span>
+                                                        <span class="text-xs text-yellow-600">Relationship</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Target -->
+                                        <div class="border border-gray-200 rounded-md">
+                                            <div class="bg-green-50 px-4 py-2 border-b border-gray-200">
+                                                <h5 class="font-medium text-green-900">Target Model (v2.0.0)</h5>
+                                                <p class="text-xs text-green-700">Enhanced E-Commerce Database</p>
+                                            </div>
+                                            <div class="p-4 max-h-96 overflow-y-auto">
+                                                <div class="space-y-2">
+                                                    <!-- Unchanged tables -->
+                                                    <div class="flex items-center p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100">
+                                                        <span class="material-symbols-outlined text-sm mr-2">table_chart</span>
+                                                        <span class="text-sm flex-1">Customers</span>
+                                                        <span class="text-xs text-gray-500">12 columns</span>
+                                                    </div>
+
+                                                    <!-- Missing in target -->
+                                                    <div class="flex items-center p-2 bg-red-50 rounded border border-red-200">
+                                                        <span class="material-symbols-outlined text-sm mr-2 text-red-600">remove</span>
+                                                        <span class="text-sm flex-1 line-through">Orders</span>
+                                                        <span class="text-xs text-red-600">Not found</span>
+                                                    </div>
+
+                                                    <!-- Modified table -->
+                                                    <div class="flex items-center p-2 bg-yellow-50 rounded border border-yellow-200 cursor-pointer hover:bg-yellow-100">
+                                                        <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">edit</span>
+                                                        <span class="text-sm flex-1">Products</span>
+                                                        <span class="text-xs text-yellow-600">11 columns</span>
+                                                    </div>
+
+                                                    <div class="flex items-center p-2 bg-gray-50 rounded">
+                                                        <span class="material-symbols-outlined text-sm mr-2">table_chart</span>
+                                                        <span class="text-sm flex-1">Categories</span>
+                                                        <span class="text-xs text-gray-500">4 columns</span>
+                                                    </div>
+
+                                                    <!-- New in target -->
+                                                    <div class="flex items-center p-2 bg-green-50 rounded border border-green-200">
+                                                        <span class="material-symbols-outlined text-sm mr-2 text-green-600">add</span>
+                                                        <span class="text-sm flex-1">OrderLineItems</span>
+                                                        <span class="text-xs text-green-600">7 columns</span>
+                                                    </div>
+
+                                                    <div class="flex items-center p-2 bg-gray-50 rounded">
+                                                        <span class="material-symbols-outlined text-sm mr-2">table_chart</span>
+                                                        <span class="text-sm flex-1">Suppliers</span>
+                                                        <span class="text-xs text-gray-500">7 columns</span>
+                                                    </div>
+
+                                                    <!-- Missing view -->
+                                                    <div class="flex items-center p-2 bg-red-50 rounded border border-red-200">
+                                                        <span class="material-symbols-outlined text-sm mr-2 text-red-600">remove</span>
+                                                        <span class="text-sm flex-1 line-through">vw_CustomerOrders</span>
+                                                        <span class="text-xs text-red-600">Not found</span>
+                                                    </div>
+
+                                                    <!-- New relationship -->
+                                                    <div class="flex items-center p-2 bg-green-50 rounded border border-green-200">
+                                                        <span class="material-symbols-outlined text-sm mr-2 text-green-600">add</span>
+                                                        <span class="text-sm flex-1">FK_OrderLineItems_Products</span>
+                                                        <span class="text-xs text-green-600">Relationship</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Detailed Object Differences -->
+                                    <div class="space-y-3">
+                                        <h4 class="text-base font-medium text-gray-900">Detailed Object Differences</h4>
+
+                                        <!-- Products table details -->
+                                        <div id="products-details" class="border border-yellow-200 rounded-md bg-yellow-50">
+                                            <div class="p-3 border-b border-yellow-200 bg-yellow-100">
+                                                <h5 class="font-medium text-yellow-900 flex items-center">
+                                                    <span class="material-symbols-outlined text-sm mr-2">table_chart</span>
+                                                    Products Table - Column Differences
+                                                </h5>
+                                            </div>
+                                            <div class="p-4">
+                                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                                    <div>
+                                                        <h6 class="font-medium text-gray-700 mb-2">Source (v1.2.0)</h6>
+                                                        <div class="space-y-1">
+                                                            <div class="flex items-center p-1">
+                                                                <span class="w-3 h-3 bg-gray-300 rounded mr-2"></span>
+                                                                <span>ProductID (int, PK)</span>
+                                                            </div>
+                                                            <div class="flex items-center p-1">
+                                                                <span class="w-3 h-3 bg-gray-300 rounded mr-2"></span>
+                                                                <span>ProductName (varchar(40))</span>
+                                                            </div>
+                                                            <div class="flex items-center p-1 bg-red-50">
+                                                                <span class="w-3 h-3 bg-red-500 rounded mr-2"></span>
+                                                                <span class="line-through">Description (varchar(255))</span>
+                                                            </div>
+                                                            <div class="flex items-center p-1 bg-yellow-50">
+                                                                <span class="w-3 h-3 bg-yellow-500 rounded mr-2"></span>
+                                                                <span>UnitPrice (decimal(10,2))</span>
+                                                            </div>
+                                                            <div class="flex items-center p-1">
+                                                                <span class="w-3 h-3 bg-gray-300 rounded mr-2"></span>
+                                                                <span>UnitsInStock (smallint)</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="font-medium text-gray-700 mb-2">Target (v2.0.0)</h6>
+                                                        <div class="space-y-1">
+                                                            <div class="flex items-center p-1">
+                                                                <span class="w-3 h-3 bg-gray-300 rounded mr-2"></span>
+                                                                <span>ProductID (int, PK)</span>
+                                                            </div>
+                                                            <div class="flex items-center p-1">
+                                                                <span class="w-3 h-3 bg-gray-300 rounded mr-2"></span>
+                                                                <span>ProductName (varchar(40))</span>
+                                                            </div>
+                                                            <div class="flex items-center p-1 bg-green-50">
+                                                                <span class="w-3 h-3 bg-green-500 rounded mr-2"></span>
+                                                                <span>ShortDescription (varchar(100))</span>
+                                                            </div>
+                                                            <div class="flex items-center p-1 bg-green-50">
+                                                                <span class="w-3 h-3 bg-green-500 rounded mr-2"></span>
+                                                                <span>LongDescription (text)</span>
+                                                            </div>
+                                                            <div class="flex items-center p-1 bg-yellow-50">
+                                                                <span class="w-3 h-3 bg-yellow-500 rounded mr-2"></span>
+                                                                <span>UnitPrice (decimal(15,4))</span>
+                                                            </div>
+                                                            <div class="flex items-center p-1">
+                                                                <span class="w-3 h-3 bg-gray-300 rounded mr-2"></span>
+                                                                <span>UnitsInStock (smallint)</span>
+                                                            </div>
+                                                            <div class="flex items-center p-1 bg-green-50">
+                                                                <span class="w-3 h-3 bg-green-500 rounded mr-2"></span>
+                                                                <span>SKU (varchar(20), UNIQUE)</span>
+                                                            </div>
+                                                            <div class="flex items-center p-1 bg-green-50">
+                                                                <span class="w-3 h-3 bg-green-500 rounded mr-2"></span>
+                                                                <span>CreatedDate (datetime)</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Orders vs OrderLineItems -->
+                                        <div class="border border-blue-200 rounded-md bg-blue-50">
+                                            <div class="p-3 border-b border-blue-200 bg-blue-100">
+                                                <h5 class="font-medium text-blue-900 flex items-center">
+                                                    <span class="material-symbols-outlined text-sm mr-2">compare_arrows</span>
+                                                    Structural Changes: Orders → OrderLineItems
+                                                </h5>
+                                            </div>
+                                            <div class="p-4">
+                                                <div class="text-sm space-y-2">
+                                                    <div class="flex items-center p-2 bg-red-50 rounded border border-red-200">
+                                                        <span class="material-symbols-outlined text-sm mr-2 text-red-600">remove</span>
+                                                        <span>Orders table removed from source</span>
+                                                    </div>
+                                                    <div class="flex items-center p-2 bg-green-50 rounded border border-green-200">
+                                                        <span class="material-symbols-outlined text-sm mr-2 text-green-600">add</span>
+                                                        <span>OrderLineItems table added in target with enhanced structure</span>
+                                                    </div>
+                                                    <div class="flex items-center p-2 bg-yellow-50 rounded border border-yellow-200">
+                                                        <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">info</span>
+                                                        <span>Relationship FK_Orders_Customers needs to be updated to FK_OrderLineItems_Customers</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Merge Options -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                            <div class="p-4 border-b border-gray-200 cursor-pointer" onclick="toggleSection('mergeOptions')">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                                        <span class="material-symbols-outlined text-lg mr-3 text-indigo-600">merge</span>
+                                        Merge Options
+                                    </h3>
+                                    <span class="material-symbols-outlined text-lg text-gray-400" id="mergeOptionsIcon">expand_more</span>
+                                </div>
+                            </div>
+                            <div id="mergeOptionsContent" class="p-4 space-y-6 hidden">
+                                <div class="grid grid-cols-2 gap-8">
+                                    <div>
+                                        <h4 class="text-base font-medium text-gray-900 mb-4">Select Objects to Merge</h4>
+                                        <div class="border border-gray-200 rounded-md max-h-48 overflow-y-auto">
+                                            <div class="p-3 space-y-2">
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="mr-3" checked>
+                                                    <span class="text-sm text-green-700">+ Orders table</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="mr-3" checked>
+                                                    <span class="text-sm text-yellow-700">~ Products name change</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="mr-3">
+                                                    <span class="text-sm text-red-700">- Order_Details table</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="mr-3" checked>
+                                                    <span class="text-sm text-yellow-700">~ Customer.email datatype</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-3 mt-3">
+                                            <button onclick="selectAllMergeObjects()" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">Select All</button>
+                                            <button onclick="deselectAllMergeObjects()" class="text-sm text-gray-600 hover:text-gray-700 font-medium">Deselect All</button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h4 class="text-base font-medium text-gray-900 mb-4">Merge Direction & Conflicts</h4>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Merge Direction</label>
+                                                <div class="space-y-2">
+                                                    <label class="flex items-center">
+                                                        <input type="radio" name="mergeDirection" value="sourceToTarget" class="mr-3" checked>
+                                                        <span class="text-sm">Source → Target</span>
+                                                    </label>
+                                                    <label class="flex items-center">
+                                                        <input type="radio" name="mergeDirection" value="targetToSource" class="mr-3">
+                                                        <span class="text-sm">Target → Source</span>
+                                                    </label>
+                                                    <label class="flex items-center">
+                                                        <input type="radio" name="mergeDirection" value="manual" class="mr-3">
+                                                        <span class="text-sm">Manual one-by-one</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Conflict Resolution</label>
+                                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                                    <option value="keepSource">Keep Source</option>
+                                                    <option value="keepTarget">Keep Target</option>
+                                                    <option value="custom">Custom merge</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. Final Actions -->
+                        <div class="flex gap-4 pt-6 border-t border-gray-200">
+                            <button onclick="runComparison()" class="bg-blue-600 text-white px-6 py-4 rounded-md text-base font-medium hover:bg-blue-700 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-lg mr-3">play_arrow</span>
+                                Run Comparison
+                            </button>
+                            <button onclick="generateComparisonReport()" class="bg-gray-600 text-white px-6 py-4 rounded-md text-base font-medium hover:bg-gray-700 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-lg mr-2">description</span>
+                                Generate Report
+                            </button>
+                            <button onclick="applyMerge()" class="bg-indigo-600 text-white px-6 py-4 rounded-md text-base font-medium hover:bg-indigo-700 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-lg mr-3">merge</span>
+                                Apply Merge
+                            </button>
+                            <button onclick="saveCompareSettings()" class="bg-gray-200 text-gray-700 px-6 py-4 rounded-md text-base font-medium hover:bg-gray-300 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-lg mr-2">save</span>
+                                Save Settings
+                            </button>
+                            <button onclick="cancelCompleteCompare()" class="bg-gray-200 text-gray-700 px-6 py-4 rounded-md text-base font-medium hover:bg-gray-300">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Column 3: Right Properties Pane (25% width) -->
@@ -1848,8 +2506,308 @@
             }
         }
 
+        // Complete Compare Functions
+        let completeCompareMode = false;
+
+        function toggleCompleteCompare() {
+            completeCompareMode = !completeCompareMode;
+            const canvasColumn = document.getElementById('canvasColumn');
+            const propertiesPanel = document.getElementById('propertiesPanel');
+            const modelExplorer = document.querySelector('.model-explorer');
+            const diagramCanvas = document.getElementById('diagramCanvas');
+            const diagramTabs = document.getElementById('diagramTabs');
+            const compareCanvas = document.getElementById('completeCompareCanvas');
+            const mainMenuCompare = document.getElementById('mainMenuCompare');
+            const toolsCompleteCompare = document.getElementById('toolsCompleteCompare');
+
+            if (completeCompareMode) {
+                // Enter Complete Compare mode - use full canvas width
+                canvasColumn.classList.remove('w-[55%]');
+                canvasColumn.classList.add('w-[80%]');
+                // Hide properties panel and disable model explorer
+                propertiesPanel.classList.add('hidden');
+                modelExplorer.classList.add('opacity-50', 'pointer-events-none');
+                // Hide diagram canvas and tabs, show compare canvas
+                diagramCanvas.classList.add('hidden');
+                diagramTabs.classList.add('hidden');
+                compareCanvas.classList.remove('hidden');
+                // Update main menu button
+                mainMenuCompare.classList.remove('text-gray-600', 'hover:text-indigo-600', 'hover:bg-gray-200');
+                mainMenuCompare.classList.add('text-white', 'bg-indigo-600');
+                mainMenuCompare.title = 'Exit Complete Compare';
+                // Update tools ribbon button
+                if (toolsCompleteCompare) {
+                    toolsCompleteCompare.classList.add('bg-indigo-100');
+                }
+            } else {
+                // Exit Complete Compare mode - restore normal layout
+                canvasColumn.classList.remove('w-[80%]');
+                canvasColumn.classList.add('w-[55%]');
+                // Show properties panel and enable model explorer
+                propertiesPanel.classList.remove('hidden');
+                modelExplorer.classList.remove('opacity-50', 'pointer-events-none');
+                // Show diagram canvas and tabs, hide compare canvas
+                diagramCanvas.classList.remove('hidden');
+                diagramTabs.classList.remove('hidden');
+                compareCanvas.classList.add('hidden');
+                // Update main menu button
+                mainMenuCompare.classList.remove('text-white', 'bg-indigo-600');
+                mainMenuCompare.classList.add('text-gray-600', 'hover:text-indigo-600', 'hover:bg-gray-200');
+                mainMenuCompare.title = 'Complete Compare';
+                // Update tools ribbon button
+                if (toolsCompleteCompare) {
+                    toolsCompleteCompare.classList.remove('bg-indigo-100');
+                }
+            }
+        }
+
+        function updateSourceOptions(sourceType) {
+            const sourceDetails = document.querySelector('#sourceDetails');
+            let html = '';
+
+            switch(sourceType) {
+                case 'local':
+                    html = `
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Model File</label>
+                            <div class="flex">
+                                <input type="file" accept=".edm,.xml,.json" class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md text-sm">
+                                <button class="px-4 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-sm hover:bg-gray-200">
+                                    Browse
+                                </button>
+                            </div>
+                        </div>`;
+                    break;
+                case 'repository':
+                    html = `
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Repository URL</label>
+                            <input type="url" placeholder="https://repository.example.com/model.edm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Authentication</label>
+                            <input type="password" placeholder="Access token or credentials" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>`;
+                    break;
+                case 'cloud':
+                    html = `
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">GitHub Repository</label>
+                            <input type="text" placeholder="username/repository" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Branch/Path</label>
+                            <input type="text" placeholder="main/models/schema.edm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>`;
+                    break;
+                case 'database':
+                    html = `
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Database Type</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                <option value="">Select database...</option>
+                                <option value="postgresql">PostgreSQL</option>
+                                <option value="mysql">MySQL</option>
+                                <option value="sqlserver">SQL Server</option>
+                                <option value="oracle">Oracle</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Connection String</label>
+                            <input type="text" placeholder="Server=localhost;Database=mydb;..." class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>`;
+                    break;
+            }
+
+            if (sourceDetails) {
+                sourceDetails.innerHTML = html;
+            }
+        }
+
+        function updateTargetOptions(targetType) {
+            // Similar implementation to updateSourceOptions but for target
+            const targetDetails = document.querySelector('#targetDetails');
+            let html = '';
+
+            switch(targetType) {
+                case 'local':
+                    html = `
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Model File</label>
+                            <div class="flex">
+                                <input type="file" accept=".edm,.xml,.json" class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md text-sm">
+                                <button class="px-4 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-sm hover:bg-gray-200">
+                                    Browse
+                                </button>
+                            </div>
+                        </div>`;
+                    break;
+                case 'repository':
+                    html = `
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Repository URL</label>
+                            <input type="url" placeholder="https://repository.example.com/model.edm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Authentication</label>
+                            <input type="password" placeholder="Access token or credentials" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>`;
+                    break;
+                case 'cloud':
+                    html = `
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">GitHub Repository</label>
+                            <input type="text" placeholder="username/repository" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Branch/Path</label>
+                            <input type="text" placeholder="main/models/schema.edm" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>`;
+                    break;
+                case 'database':
+                    html = `
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Database Type</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                <option value="">Select database...</option>
+                                <option value="postgresql">PostgreSQL</option>
+                                <option value="mysql">MySQL</option>
+                                <option value="sqlserver">SQL Server</option>
+                                <option value="oracle">Oracle</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Connection String</label>
+                            <input type="text" placeholder="Server=localhost;Database=mydb;..." class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>`;
+                    break;
+            }
+
+            if (targetDetails) {
+                targetDetails.innerHTML = html;
+            }
+        }
+
+        function swapSourceTarget() {
+            // Get current source and target values and swap them
+            const sourceTypeSelect = document.querySelector('#sourceTargetContent select:first-of-type');
+            const targetTypeSelect = document.querySelector('#sourceTargetContent select:nth-of-type(2)');
+
+            if (sourceTypeSelect && targetTypeSelect) {
+                const tempValue = sourceTypeSelect.value;
+                sourceTypeSelect.value = targetTypeSelect.value;
+                targetTypeSelect.value = tempValue;
+
+                // Update the options for both
+                updateSourceOptions(sourceTypeSelect.value);
+                updateTargetOptions(targetTypeSelect.value);
+            }
+        }
+
+        function toggleCompareMenu() {
+            const submenu = document.getElementById('compareSubmenu');
+            submenu.classList.toggle('hidden');
+
+            // Close submenu when clicking outside
+            document.addEventListener('click', function closeSubmenu(e) {
+                if (!e.target.closest('#compareMenuButton') && !e.target.closest('#compareSubmenu')) {
+                    submenu.classList.add('hidden');
+                    document.removeEventListener('click', closeSubmenu);
+                }
+            });
+        }
+
+        function quickCompare() {
+            alert('Quick Compare functionality coming soon!');
+            document.getElementById('compareSubmenu').classList.add('hidden');
+        }
+
+        function runComparison() {
+            // Simulate comparison process
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span class="material-symbols-outlined text-base mr-2 animate-spin">refresh</span>Comparing...';
+            button.disabled = true;
+
+            setTimeout(() => {
+                // Open comparison results section
+                const resultsSection = document.getElementById('comparisonResultsContent');
+                const resultsIcon = document.getElementById('comparisonResultsIcon');
+
+                if (resultsSection && resultsIcon) {
+                    resultsSection.classList.remove('hidden');
+                    resultsIcon.textContent = 'expand_less';
+                    resultsSection.scrollIntoView({ behavior: 'smooth' });
+                }
+
+                // Reset button
+                button.innerHTML = originalText;
+                button.disabled = false;
+
+                // Show detailed results notification
+                const notification = document.createElement('div');
+                notification.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg z-50';
+                notification.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="material-symbols-outlined text-base mr-2">check_circle</span>
+                        <div>
+                            <strong>Comparison completed!</strong><br>
+                            <span class="text-sm">Found 23 total differences: 12 added, 3 deleted, 8 modified</span>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+
+                // Auto-remove notification after 5 seconds
+                setTimeout(() => {
+                    notification.remove();
+                }, 5000);
+            }, 3000);
+        }
+
+        function generateComparisonReport() {
+            alert('Generating comparison report... This will be exported as PDF.');
+        }
+
+        function applyMerge() {
+            if (confirm('Are you sure you want to apply the selected merge changes to the target model?')) {
+                alert('Merge completed successfully! 8 changes have been applied to the target model.');
+                toggleCompleteCompare();
+            }
+        }
+
+        function cancelCompleteCompare() {
+            if (confirm('Are you sure you want to cancel? All comparison settings will be lost.')) {
+                toggleCompleteCompare();
+            }
+        }
+
+        function selectAllCompareObjects() {
+            const checkboxes = document.querySelectorAll('#compareScopeContent input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+        }
+
+        function deselectAllCompareObjects() {
+            const checkboxes = document.querySelectorAll('#compareScopeContent input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+        }
+
+        function saveCompareSettings() {
+            const settingsName = prompt('Enter settings name:', 'My Compare Settings');
+            if (settingsName) {
+                alert(`Comparison settings "${settingsName}" saved successfully!`);
+            }
+        }
+
+        function toggleObjectDetails(detailsId) {
+            const element = document.getElementById(detailsId);
+            if (element) {
+                element.classList.toggle('hidden');
+            }
+        }
+
         console.log('Erwin Cloud DM - Data Modeler loaded successfully!');
-        console.log('Features: Docked toolbar, contextual toolbar, keyboard shortcuts, tooltips, reverse engineering');
+        console.log('Features: Docked toolbar, contextual toolbar, keyboard shortcuts, tooltips, reverse engineering, complete compare');
     </script>
 </body>
 </html>
