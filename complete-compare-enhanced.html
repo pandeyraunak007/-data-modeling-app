@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Compare - Erwin Cloud DM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Enhanced Tree Styling */
+        .tree-item {
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .tree-item:hover {
+            background: #f8fafc;
+            transform: translateX(2px);
+        }
+        .tree-item.level-1 { padding-left: 8px; font-weight: 600; }
+        .tree-item.level-2 {
+            padding-left: 24px;
+            margin: 2px 0;
+            border-left: 2px solid transparent;
+        }
+        .tree-item.level-3 { padding-left: 40px; }
+
+        /* Minimal Status Colors - Only for Differences */
+        .status-identical {
+            /* No special styling for identical items */
+        }
+        .status-conflict {
+            background: #fef3c7;
+            border-left: 3px solid #f59e0b;
+        }
+        .status-missing {
+            background: #fee2e2;
+            border-left: 3px solid #ef4444;
+        }
+        .status-added {
+            background: #dbeafe;
+            border-left: 3px solid #3b82f6;
+        }
+
+        /* Custom Icons */
+        .icon-table::before { content: "📊"; font-size: 14px; }
+        .icon-view::before { content: "👁️"; font-size: 14px; }
+        .icon-key::before { content: "🔑"; font-size: 14px; }
+        .icon-relationship::before { content: "🔗"; font-size: 14px; }
+        .icon-index::before { content: "⚡"; font-size: 14px; }
+        .icon-folder::before { content: "📁"; font-size: 14px; }
+        .icon-folder-open::before { content: "📂"; font-size: 14px; }
+
+        /* Inline Action Buttons */
+        .inline-actions {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .tree-item:hover .inline-actions {
+            opacity: 1;
+        }
+        .action-btn {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .action-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Show Options Panel */
+        .show-panel {
+            width: 280px;
+            transition: all 0.3s ease;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+        }
+        .show-panel.collapsed {
+            width: 48px;
+        }
+        .show-panel.collapsed .panel-content {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Professional Tooltips */
+        .tooltip {
+            position: relative;
+        }
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        /* Animated Progress Bar */
+        .progress-bar {
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            border-radius: 2px;
+            animation: progress 2s ease-in-out;
+        }
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 160px;
+            display: none;
+        }
+        .context-menu-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .context-menu-item:hover {
+            background: #f8fafc;
+        }
+        .context-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Bulk Selection */
+        .bulk-actions {
+            position: sticky;
+            top: 0;
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 10;
+        }
+        .bulk-actions.show {
+            display: flex;
+        }
+
+        /* Slide animations */
+        .slide-drawer { transform: translateX(100%); transition: transform 0.3s ease; }
+        .slide-drawer.open { transform: translateX(0); }
+
+        /* Enhanced responsive grid */
+        .comparison-grid {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .comparison-main {
+            display: grid;
+            grid-template-columns: 280px 1fr 1fr 1fr;
+            flex: 1;
+            transition: grid-template-columns 0.3s ease;
+        }
+        .comparison-main.panel-collapsed {
+            grid-template-columns: 48px 1fr 1fr 1fr;
+        }
+
+        /* Property pane at bottom */
+        .property-pane-full {
+            height: 320px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* Professional loading states */
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Step 1: Model Selection -->
+    <div id="modelSelection" class="min-h-screen flex items-center justify-center p-8">
+        <div class="max-w-2xl w-full">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                    <span class="material-symbols-outlined text-2xl text-blue-600">compare_arrows</span>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Complete Compare</h1>
+                <p class="text-gray-600">Professional model comparison with advanced merge capabilities</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border p-8">
+                <div class="space-y-6">
+                    <!-- Left Model (Source) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Left Model (Source)
+                        </label>
+                        <select id="leftModel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select source model...</option>
+                            <option value="current" selected>Current Model (CustomerDB_v1.2)</option>
+                            <option value="local1">CustomerDB_v1.1.dmf</option>
+                            <option value="local2">OrderSystem_v2.0.dmf</option>
+                            <option value="repo1">Repository: MainDB_v3.1</option>
+                        </select>
+                    </div>
+
+                    <!-- Right Model (Target) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Right Model (Target)
+                        </label>
+                        <select id="rightModel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select target model...</option>
+                            <option value="local3" selected>CustomerDB_v1.3.dmf</option>
+                            <option value="local4">CustomerDB_v1.4_beta.dmf</option>
+                            <option value="repo2">Repository: CustomerDB_latest</option>
+                            <option value="db1">Database: Production_CustomerDB</option>
+                        </select>
+                    </div>
+
+                    <!-- Merge Model Name (Optional) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Merge Model Name (Optional)
+                        </label>
+                        <input type="text" id="mergeModelName"
+                               value="CustomerDB_v1.3_merged"
+                               placeholder="Auto-suggested merge name"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Will be auto-suggested based on selected models</p>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button onclick="window.location.href='modeler.html'"
+                                class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button onclick="startComparison()"
+                                class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            Start Professional Compare
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Enhanced Comparison View -->
+    <div id="comparisonView" class="hidden min-h-screen flex flex-col">
+
+        <!-- Enhanced Toolbar -->
+        <div class="bg-white border-b border-gray-200 px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <!-- Show Panel Toggle -->
+                    <button onclick="toggleShowPanel()" class="tooltip p-2 hover:bg-gray-100 rounded" data-tooltip="Toggle Show Options">
+                        <span class="material-symbols-outlined">tune</span>
+                    </button>
+
+                    <!-- Quick Search -->
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
+                        <input type="text" placeholder="🔍 Quick search..." id="quickSearch" oninput="quickFilter()"
+                               class="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-64 text-sm focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="flex items-center space-x-2">
+                        <button onclick="bulkAcceptLeft()" class="tooltip bg-blue-100 text-blue-800 px-3 py-1.5 rounded text-sm hover:bg-blue-200" data-tooltip="Accept All Left (Ctrl+L)">
+                            ⚡ Accept All Left
+                        </button>
+                        <button onclick="bulkAcceptRight()" class="tooltip bg-green-100 text-green-800 px-3 py-1.5 rounded text-sm hover:bg-green-200" data-tooltip="Accept All Right (Ctrl+R)">
+                            ⚡ Accept All Right
+                        </button>
+                        <button onclick="smartMerge()" class="tooltip bg-purple-100 text-purple-800 px-3 py-1.5 rounded text-sm hover:bg-purple-200" data-tooltip="Smart Auto-Merge (Ctrl+M)">
+                            🧠 Smart Merge
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <!-- Progress Indicator -->
+                    <div class="text-sm text-gray-600">
+                        <span id="progressText">8 conflicts pending</span>
+                        <div class="w-32 h-1 bg-gray-200 rounded mt-1">
+                            <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Export Options -->
+                    <button onclick="toggleReportDrawer()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
+                        📑 Export Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Actions Bar (appears when items selected) -->
+        <div id="bulkActions" class="bulk-actions">
+            <span class="material-symbols-outlined text-blue-600">check_box</span>
+            <span id="selectedCount">3 items selected</span>
+            <button onclick="bulkResolve('left')" class="action-btn bg-blue-100 text-blue-800 hover:bg-blue-200">
+                Accept Left
+            </button>
+            <button onclick="bulkResolve('right')" class="action-btn bg-green-100 text-green-800 hover:bg-green-200">
+                Accept Right
+            </button>
+            <button onclick="bulkResolve('custom')" class="action-btn bg-purple-100 text-purple-800 hover:bg-purple-200">
+                Custom Merge
+            </button>
+            <button onclick="clearSelection()" class="action-btn bg-gray-100 text-gray-700 hover:bg-gray-200">
+                Clear Selection
+            </button>
+        </div>
+
+        <!-- Enhanced Comparison Grid -->
+        <div class="comparison-grid flex-1" id="comparisonGrid">
+
+            <!-- Main Comparison Area (4 columns) -->
+            <div class="comparison-main" id="comparisonMain">
+
+                <!-- Column 1: Show Options Panel -->
+                <div id="showPanel" class="show-panel bg-white border-r border-gray-200 overflow-y-auto">
+                <div class="panel-content p-4">
+                    <!-- Panel Header -->
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-gray-900">Show Options</h3>
+                        <button onclick="toggleShowPanel()" class="text-gray-400 hover:text-gray-600">
+                            <span class="material-symbols-outlined text-sm">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Display Modes -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-3">Display Mode</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="radio" name="displayMode" value="all" checked onchange="applyDisplayMode()" class="mr-3">
+                                <span class="material-symbols-outlined text-sm mr-2">visibility</span>
+                                <span class="text-sm">All Objects</span>
+                                <span class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">24</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="radio" name="displayMode" value="differences" onchange="applyDisplayMode()" class="mr-3">
+                                <span class="material-symbols-outlined text-sm mr-2">difference</span>
+                                <span class="text-sm">Only Differences</span>
+                                <span class="ml-auto text-xs text-gray-500 bg-yellow-100 px-2 py-1 rounded">16</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="radio" name="displayMode" value="conflicts" onchange="applyDisplayMode()" class="mr-3">
+                                <span class="material-symbols-outlined text-sm mr-2">warning</span>
+                                <span class="text-sm">Only Conflicts</span>
+                                <span class="ml-auto text-xs text-gray-500 bg-red-100 px-2 py-1 rounded">8</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Object Types -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-3">Object Types</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="checkbox" id="showTables" checked onchange="applyFilters()" class="mr-3">
+                                <span class="icon-table mr-2"></span>
+                                <span class="text-sm">Tables</span>
+                                <span class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">5</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="checkbox" id="showViews" checked onchange="applyFilters()" class="mr-3">
+                                <span class="icon-view mr-2"></span>
+                                <span class="text-sm">Views</span>
+                                <span class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">3</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="checkbox" id="showKeys" checked onchange="applyFilters()" class="mr-3">
+                                <span class="icon-key mr-2"></span>
+                                <span class="text-sm">Keys</span>
+                                <span class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">7</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="checkbox" id="showRelationships" checked onchange="applyFilters()" class="mr-3">
+                                <span class="icon-relationship mr-2"></span>
+                                <span class="text-sm">Relationships</span>
+                                <span class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">3</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="checkbox" id="showIndexes" checked onchange="applyFilters()" class="mr-3">
+                                <span class="icon-index mr-2"></span>
+                                <span class="text-sm">Indexes</span>
+                                <span class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">6</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Comparison States -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-3">Comparison States</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="checkbox" id="showIdentical" checked onchange="applyFilters()" class="mr-3">
+                                <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                                <span class="text-sm">Identical</span>
+                                <span class="ml-auto text-xs text-gray-500 bg-green-100 px-2 py-1 rounded">4</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="checkbox" id="showConflicts" checked onchange="applyFilters()" class="mr-3">
+                                <span class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
+                                <span class="text-sm">Conflicts</span>
+                                <span class="ml-auto text-xs text-gray-500 bg-yellow-100 px-2 py-1 rounded">8</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="checkbox" id="showMissing" checked onchange="applyFilters()" class="mr-3">
+                                <span class="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                                <span class="text-sm">Missing</span>
+                                <span class="ml-auto text-xs text-gray-500 bg-red-100 px-2 py-1 rounded">6</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="checkbox" id="showAdded" checked onchange="applyFilters()" class="mr-3">
+                                <span class="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                                <span class="text-sm">Added</span>
+                                <span class="ml-auto text-xs text-gray-500 bg-blue-100 px-2 py-1 rounded">6</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Options -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-3">Advanced Options</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="checkbox" id="groupByTable" onchange="applyGrouping()" class="mr-3">
+                                <span class="material-symbols-outlined text-sm mr-2">account_tree</span>
+                                <span class="text-sm">Group by Table</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="checkbox" id="showDetails" checked onchange="toggleDetails()" class="mr-3">
+                                <span class="material-symbols-outlined text-sm mr-2">info</span>
+                                <span class="text-sm">Show Details</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                <input type="checkbox" id="autoExpand" onchange="toggleAutoExpand()" class="mr-3">
+                                <span class="material-symbols-outlined text-sm mr-2">expand_all</span>
+                                <span class="text-sm">Auto Expand</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- View Presets -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-3">View Presets</h4>
+                        <div class="space-y-2">
+                            <button onclick="applyPreset('conflictsOnly')" class="w-full text-left p-2 hover:bg-gray-50 rounded text-sm">
+                                🚨 Conflicts Only
+                            </button>
+                            <button onclick="applyPreset('tablesAndViews')" class="w-full text-left p-2 hover:bg-gray-50 rounded text-sm">
+                                📊 Tables & Views Only
+                            </button>
+                            <button onclick="applyPreset('structureOnly')" class="w-full text-left p-2 hover:bg-gray-50 rounded text-sm">
+                                🏗️ Structure Only
+                            </button>
+                            <button onclick="saveCurrentView()" class="w-full text-left p-2 hover:bg-gray-50 rounded text-sm text-blue-600">
+                                💾 Save Current View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapsed Panel -->
+                <div class="p-2 border-t border-gray-200">
+                    <button onclick="toggleShowPanel()" class="w-full p-2 hover:bg-gray-50 rounded tooltip" data-tooltip="Expand Show Options">
+                        <span class="material-symbols-outlined text-gray-400">tune</span>
+                    </button>
+                </div>
+                </div>
+
+                <!-- Column 2: Left Model (Source) -->
+            <div class="bg-white border-r border-gray-200 overflow-y-auto">
+                <div class="p-4 border-b border-gray-200 bg-blue-50">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-blue-900">Source Model</h3>
+                            <p class="text-sm text-blue-600">CustomerDB_v1.2</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="selectAllLeft()" class="tooltip text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200" data-tooltip="Select All Left">
+                                ☑️ All
+                            </button>
+                            <button onclick="expandAllLeft()" class="tooltip text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200" data-tooltip="Expand All">
+                                📂 Expand
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="leftTree" class="p-2">
+                    <!-- Enhanced Tables Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="tables">
+                        <div class="flex items-center justify-between cursor-pointer" onclick="toggleTreeNode('leftTables')">
+                            <div class="flex items-center">
+                                <span class="icon-folder-open mr-2" id="leftTablesIcon"></span>
+                                <span class="icon-table mr-2"></span>
+                                <span class="font-medium">Tables</span>
+                                <span class="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">5</span>
+                            </div>
+                            <button onclick="event.stopPropagation(); selectGroup('leftTables')" class="tooltip text-xs hover:bg-gray-100 p-1 rounded" data-tooltip="Select All Tables">
+                                ☑️
+                            </button>
+                        </div>
+                        <div id="leftTables" class="mt-1">
+                            <!-- Customer Table - Identical -->
+                            <div class="tree-item level-2 status-identical cursor-pointer" onclick="selectObject('Customer', 'table')" data-name="customer" data-status="identical">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-gray-600">table_view</span>
+                                        <span>Customer</span>
+                                        <span class="text-xs text-gray-500 ml-2">4 cols</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-gray-100 text-gray-600 text-xs">Same</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Order Table - Conflict -->
+                            <div class="tree-item level-2 status-conflict cursor-pointer" onclick="selectObject('Order', 'table')" data-name="order" data-status="conflict">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">warning</span>
+                                        <span>Order</span>
+                                        <span class="text-xs text-gray-500 ml-2">5 cols</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-blue-100 text-blue-800 hover:bg-blue-200" onclick="event.stopPropagation(); quickResolve('Order', 'left')">
+                                            ← Use
+                                        </span>
+                                        <span class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200" onclick="event.stopPropagation(); customMerge('Order')">
+                                            ⚙️
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- OrderItem Table - Conflict -->
+                            <div class="tree-item level-2 status-conflict cursor-pointer" onclick="selectObject('OrderItem', 'table')" data-name="orderitem" data-status="conflict">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">warning</span>
+                                        <span>OrderItem</span>
+                                        <span class="text-xs text-gray-500 ml-2">4 cols</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-blue-100 text-blue-800 hover:bg-blue-200" onclick="event.stopPropagation(); quickResolve('OrderItem', 'left')">
+                                            ← Use
+                                        </span>
+                                        <span class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200" onclick="event.stopPropagation(); customMerge('OrderItem')">
+                                            ⚙️
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TempOrder Table - Missing in Right -->
+                            <div class="tree-item level-2 status-missing cursor-pointer" onclick="selectObject('TempOrder', 'table')" data-name="temporder" data-status="missing">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-red-600">remove_circle</span>
+                                        <span>TempOrder</span>
+                                        <span class="text-xs text-gray-500 ml-2">3 cols</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-red-100 text-red-800 hover:bg-red-200" onclick="event.stopPropagation(); quickResolve('TempOrder', 'remove')">
+                                            Drop
+                                        </span>
+                                        <span class="action-btn bg-green-100 text-green-800 hover:bg-green-200" onclick="event.stopPropagation(); quickResolve('TempOrder', 'keep')">
+                                            Keep
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Table - Not in Left -->
+                            <div class="tree-item level-2 status-added cursor-pointer opacity-50" onclick="selectObject('Product', 'table')" data-name="product" data-status="added">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()" disabled>
+                                        <span class="material-symbols-outlined text-sm mr-2 text-gray-400">add_circle_outline</span>
+                                        <span class="text-gray-400">Product</span>
+                                        <span class="text-xs text-gray-400 ml-2">Not in Left</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    <!-- Views Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="views">
+                        <div class="flex items-center justify-between cursor-pointer" onclick="toggleTreeNode('leftViews')">
+                            <div class="flex items-center">
+                                <span class="icon-folder-open mr-2" id="leftViewsIcon"></span>
+                                <span class="material-symbols-outlined text-sm mr-2 text-purple-600">visibility</span>
+                                <span class="font-medium">Views</span>
+                                <span class="ml-2 text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">3</span>
+                            </div>
+                        </div>
+                        <div id="leftViews" class="mt-1">
+                            <!-- CustomerOrders View - Identical -->
+                            <div class="tree-item level-2 status-identical cursor-pointer" onclick="selectObject('CustomerOrders', 'view')" data-name="customerorders" data-status="identical">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-gray-600">visibility</span>
+                                        <span>CustomerOrders</span>
+                                        <span class="text-xs text-gray-500 ml-2">View</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-gray-100 text-gray-600 text-xs">Same</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- OrderSummary View - Conflict -->
+                            <div class="tree-item level-2 status-conflict cursor-pointer" onclick="selectObject('OrderSummary', 'view')" data-name="ordersummary" data-status="conflict">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">warning</span>
+                                        <span>OrderSummary</span>
+                                        <span class="text-xs text-gray-500 ml-2">View</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-blue-100 text-blue-800 hover:bg-blue-200" onclick="event.stopPropagation(); quickResolve('OrderSummary', 'left')">
+                                            ← Use
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ProductCatalog View - Missing -->
+                            <div class="tree-item level-2 status-added cursor-pointer opacity-50" onclick="selectObject('ProductCatalog', 'view')" data-name="productcatalog" data-status="added">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()" disabled>
+                                        <span class="material-symbols-outlined text-sm mr-2 text-gray-400">add_circle_outline</span>
+                                        <span class="text-gray-400">ProductCatalog</span>
+                                        <span class="text-xs text-gray-400 ml-2">Not in Left</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Keys Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="keys">
+                        <div class="flex items-center justify-between cursor-pointer" onclick="toggleTreeNode('leftKeys')">
+                            <div class="flex items-center">
+                                <span class="icon-folder-open mr-2" id="leftKeysIcon"></span>
+                                <span class="material-symbols-outlined text-sm mr-2 text-orange-600">key</span>
+                                <span class="font-medium">Keys</span>
+                                <span class="ml-2 text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">7</span>
+                            </div>
+                        </div>
+                        <div id="leftKeys" class="mt-1">
+                            <!-- PK_Customer - Identical -->
+                            <div class="tree-item level-2 status-identical cursor-pointer" onclick="selectObject('PK_Customer', 'key')" data-name="pk_customer" data-status="identical">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-gray-600">key</span>
+                                        <span>PK_Customer</span>
+                                        <span class="text-xs text-gray-500 ml-2">PK</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- FK_Order_Customer - Conflict -->
+                            <div class="tree-item level-2 status-conflict cursor-pointer" onclick="selectObject('FK_Order_Customer', 'key')" data-name="fk_order_customer" data-status="conflict">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">warning</span>
+                                        <span>FK_Order_Customer</span>
+                                        <span class="text-xs text-gray-500 ml-2">FK</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-blue-100 text-blue-800 hover:bg-blue-200" onclick="event.stopPropagation(); quickResolve('FK_Order_Customer', 'left')">
+                                            ← Use
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- UK_Customer_Email - Missing -->
+                            <div class="tree-item level-2 status-missing cursor-pointer" onclick="selectObject('UK_Customer_Email', 'key')" data-name="uk_customer_email" data-status="missing">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-red-600">remove_circle</span>
+                                        <span>UK_Customer_Email</span>
+                                        <span class="text-xs text-gray-500 ml-2">UK</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-green-100 text-green-800 hover:bg-green-200" onclick="event.stopPropagation(); quickResolve('UK_Customer_Email', 'keep')">
+                                            Keep
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Relationships Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="relationships">
+                        <div class="flex items-center justify-between cursor-pointer" onclick="toggleTreeNode('leftRels')">
+                            <div class="flex items-center">
+                                <span class="icon-folder-open mr-2" id="leftRelsIcon"></span>
+                                <span class="material-symbols-outlined text-sm mr-2 text-green-600">link</span>
+                                <span class="font-medium">Relationships</span>
+                                <span class="ml-2 text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">3</span>
+                            </div>
+                        </div>
+                        <div id="leftRels" class="mt-1">
+                            <!-- Customer-Order - Identical -->
+                            <div class="tree-item level-2 status-identical cursor-pointer" onclick="selectObject('Customer-Order', 'relationship')" data-name="customer-order" data-status="identical">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-gray-600">link</span>
+                                        <span>Customer → Order</span>
+                                        <span class="text-xs text-gray-500 ml-2">1:M</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Order-OrderItem - Conflict -->
+                            <div class="tree-item level-2 status-conflict cursor-pointer" onclick="selectObject('Order-OrderItem', 'relationship')" data-name="order-orderitem" data-status="conflict">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">warning</span>
+                                        <span>Order → OrderItem</span>
+                                        <span class="text-xs text-gray-500 ml-2">1:M</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-blue-100 text-blue-800 hover:bg-blue-200" onclick="event.stopPropagation(); quickResolve('Order-OrderItem', 'left')">
+                                            ← Use
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Indexes Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="indexes">
+                        <div class="flex items-center justify-between cursor-pointer" onclick="toggleTreeNode('leftIndexes')">
+                            <div class="flex items-center">
+                                <span class="icon-folder-open mr-2" id="leftIndexesIcon"></span>
+                                <span class="material-symbols-outlined text-sm mr-2 text-indigo-600">speed</span>
+                                <span class="font-medium">Indexes</span>
+                                <span class="ml-2 text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">6</span>
+                            </div>
+                        </div>
+                        <div id="leftIndexes" class="mt-1">
+                            <!-- IDX_Customer_LastName - Identical -->
+                            <div class="tree-item level-2 status-identical cursor-pointer" onclick="selectObject('IDX_Customer_LastName', 'index')" data-name="idx_customer_lastname" data-status="identical">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-gray-600">speed</span>
+                                        <span>IDX_Customer_LastName</span>
+                                        <span class="text-xs text-gray-500 ml-2">Index</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- IDX_Order_Date - Conflict -->
+                            <div class="tree-item level-2 status-conflict cursor-pointer" onclick="selectObject('IDX_Order_Date', 'index')" data-name="idx_order_date" data-status="conflict">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">warning</span>
+                                        <span>IDX_Order_Date</span>
+                                        <span class="text-xs text-gray-500 ml-2">Index</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-blue-100 text-blue-800 hover:bg-blue-200" onclick="event.stopPropagation(); quickResolve('IDX_Order_Date', 'left')">
+                                            ← Use
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- IDX_Order_Status - Missing -->
+                            <div class="tree-item level-2 status-missing cursor-pointer" onclick="selectObject('IDX_Order_Status', 'index')" data-name="idx_order_status" data-status="missing">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-red-600">remove_circle</span>
+                                        <span>IDX_Order_Status</span>
+                                        <span class="text-xs text-gray-500 ml-2">Index</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-green-100 text-green-800 hover:bg-green-200" onclick="event.stopPropagation(); quickResolve('IDX_Order_Status', 'keep')">
+                                            Keep
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional sections with similar enhancement patterns... -->
+                    <!-- Views, Keys, Relationships, Indexes sections would follow the same pattern -->
+
+                </div>
+            </div>
+
+            <!-- Middle Column: Merge Model -->
+            <div class="bg-purple-50 border-r border-gray-200 overflow-y-auto">
+                <div class="p-4 border-b border-gray-200 bg-purple-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-purple-900">Merge Model</h3>
+                            <p class="text-sm text-purple-600">CustomerDB_v1.3_merged</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                                8 pending
+                            </span>
+                            <button onclick="previewMerge()" class="tooltip text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded hover:bg-purple-200" data-tooltip="Preview Final Merge">
+                                👁️ Preview
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="mergeArea" class="p-4">
+                    <div class="text-center text-gray-500 py-8">
+                        <span class="material-symbols-outlined text-4xl mb-2 block">merge</span>
+                        <p class="mb-4">Select an object to see merge options</p>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-center items-center space-x-4">
+                                <span class="flex items-center">
+                                    <span class="w-3 h-3 bg-green-500 rounded-full mr-1"></span>
+                                    4 Resolved
+                                </span>
+                                <span class="flex items-center">
+                                    <span class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></span>
+                                    8 Pending
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Target Model -->
+            <div class="bg-white overflow-y-auto">
+                <div class="p-4 border-b border-gray-200 bg-green-50">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-green-900">Target Model</h3>
+                            <p class="text-sm text-green-600">CustomerDB_v1.3</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="selectAllRight()" class="tooltip text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200" data-tooltip="Select All Right">
+                                ☑️ All
+                            </button>
+                            <button onclick="expandAllRight()" class="tooltip text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200" data-tooltip="Expand All">
+                                📂 Expand
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="rightTree" class="p-2">
+                    <!-- Tables Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="tables">
+                        <div class="flex items-center justify-between cursor-pointer" onclick="toggleTreeNode('rightTables')">
+                            <div class="flex items-center">
+                                <span class="icon-folder-open mr-2" id="rightTablesIcon"></span>
+                                <span class="material-symbols-outlined text-sm mr-2 text-blue-600">table_view</span>
+                                <span class="font-medium">Tables</span>
+                                <span class="ml-2 text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">4</span>
+                            </div>
+                        </div>
+                        <div id="rightTables" class="mt-1">
+                            <!-- Customer Table - Identical -->
+                            <div class="tree-item level-2 status-identical cursor-pointer" onclick="selectObject('Customer', 'table')" data-name="customer" data-status="identical">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-gray-600">table_view</span>
+                                        <span>Customer</span>
+                                        <span class="text-xs text-gray-500 ml-2">4 cols</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-gray-100 text-gray-600 text-xs">Same</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Order Table - Conflict -->
+                            <div class="tree-item level-2 status-conflict cursor-pointer" onclick="selectObject('Order', 'table')" data-name="order" data-status="conflict">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">warning</span>
+                                        <span>Order</span>
+                                        <span class="text-xs text-gray-500 ml-2">6 cols</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-green-100 text-green-800 hover:bg-green-200" onclick="event.stopPropagation(); quickResolve('Order', 'right')">
+                                            Use →
+                                        </span>
+                                        <span class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200" onclick="event.stopPropagation(); customMerge('Order')">
+                                            ⚙️
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- OrderItem Table - Conflict -->
+                            <div class="tree-item level-2 status-conflict cursor-pointer" onclick="selectObject('OrderItem', 'table')" data-name="orderitem" data-status="conflict">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">warning</span>
+                                        <span>OrderItem</span>
+                                        <span class="text-xs text-gray-500 ml-2">5 cols</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-green-100 text-green-800 hover:bg-green-200" onclick="event.stopPropagation(); quickResolve('OrderItem', 'right')">
+                                            Use →
+                                        </span>
+                                        <span class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200" onclick="event.stopPropagation(); customMerge('OrderItem')">
+                                            ⚙️
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Table - Present in Right -->
+                            <div class="tree-item level-2 status-missing cursor-pointer" onclick="selectObject('Product', 'table')" data-name="product" data-status="missing">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-red-600">remove_circle</span>
+                                        <span>Product</span>
+                                        <span class="text-xs text-gray-500 ml-2">5 cols</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-green-100 text-green-800 hover:bg-green-200" onclick="event.stopPropagation(); quickResolve('Product', 'add')">
+                                            Add
+                                        </span>
+                                        <span class="action-btn bg-red-100 text-red-800 hover:bg-red-200" onclick="event.stopPropagation(); quickResolve('Product', 'ignore')">
+                                            Ignore
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TempOrder Table - Not in Right -->
+                            <div class="tree-item level-2 status-added cursor-pointer opacity-50" onclick="selectObject('TempOrder', 'table')" data-name="temporder" data-status="added">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()" disabled>
+                                        <span class="material-symbols-outlined text-sm mr-2 text-gray-400">add_circle_outline</span>
+                                        <span class="text-gray-400">TempOrder</span>
+                                        <span class="text-xs text-gray-400 ml-2">Not in Right</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Views Section -->
+                    <div class="tree-item level-1 py-2 filter-group" data-type="views">
+                        <div class="flex items-center justify-between cursor-pointer" onclick="toggleTreeNode('rightViews')">
+                            <div class="flex items-center">
+                                <span class="icon-folder-open mr-2" id="rightViewsIcon"></span>
+                                <span class="material-symbols-outlined text-sm mr-2 text-purple-600">visibility</span>
+                                <span class="font-medium">Views</span>
+                                <span class="ml-2 text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">3</span>
+                            </div>
+                        </div>
+                        <div id="rightViews" class="mt-1">
+                            <!-- CustomerOrders View - Identical -->
+                            <div class="tree-item level-2 status-identical cursor-pointer" onclick="selectObject('CustomerOrders', 'view')" data-name="customerorders" data-status="identical">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-gray-600">visibility</span>
+                                        <span>CustomerOrders</span>
+                                        <span class="text-xs text-gray-500 ml-2">View</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-gray-100 text-gray-600 text-xs">Same</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- OrderSummary View - Conflict -->
+                            <div class="tree-item level-2 status-conflict cursor-pointer" onclick="selectObject('OrderSummary', 'view')" data-name="ordersummary" data-status="conflict">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">warning</span>
+                                        <span>OrderSummary</span>
+                                        <span class="text-xs text-gray-500 ml-2">View</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-green-100 text-green-800 hover:bg-green-200" onclick="event.stopPropagation(); quickResolve('OrderSummary', 'right')">
+                                            Use →
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ProductCatalog View - New -->
+                            <div class="tree-item level-2 status-missing cursor-pointer" onclick="selectObject('ProductCatalog', 'view')" data-name="productcatalog" data-status="missing">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                        <span class="material-symbols-outlined text-sm mr-2 text-red-600">remove_circle</span>
+                                        <span>ProductCatalog</span>
+                                        <span class="text-xs text-gray-500 ml-2">View</span>
+                                    </div>
+                                    <div class="inline-actions">
+                                        <span class="action-btn bg-green-100 text-green-800 hover:bg-green-200" onclick="event.stopPropagation(); quickResolve('ProductCatalog', 'add')">
+                                            Add
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+                <!-- Column 3: Middle Column - Merge Model -->
+                <div class="bg-purple-50 border-r border-gray-200 overflow-y-auto">
+                    <div class="p-4 border-b border-gray-200 bg-purple-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-semibold text-purple-900">Merge Model</h3>
+                                <p class="text-sm text-purple-600">CustomerDB_v1.3_merged</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                                    8 pending
+                                </span>
+                                <button onclick="previewMerge()" class="tooltip text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded hover:bg-purple-200" data-tooltip="Preview Final Merge">
+                                    👁️ Preview
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="mergeArea" class="p-4">
+                        <div class="text-center text-gray-500 py-8">
+                            <span class="material-symbols-outlined text-4xl mb-2 block">merge</span>
+                            <p class="mb-4">Select an object to see merge options</p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-center items-center space-x-4">
+                                    <span class="flex items-center">
+                                        <span class="w-3 h-3 bg-green-500 rounded-full mr-1"></span>
+                                        4 Resolved
+                                    </span>
+                                    <span class="flex items-center">
+                                        <span class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></span>
+                                        8 Pending
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 4: Right Model (Target) -->
+                <div class="bg-white overflow-y-auto">
+                    <div class="p-4 border-b border-gray-200 bg-green-50">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-semibold text-green-900">Target Model</h3>
+                                <p class="text-sm text-green-600">CustomerDB_v1.3</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="selectAllRight()" class="tooltip text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200" data-tooltip="Select All Right">
+                                    ☑️ All
+                                </button>
+                                <button onclick="expandAllRight()" class="tooltip text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200" data-tooltip="Expand All">
+                                    📂 Expand
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="rightTree" class="p-2">
+                        <!-- Tables Section -->
+                        <div class="tree-item level-1 py-2 filter-group" data-type="tables">
+                            <div class="flex items-center justify-between cursor-pointer" onclick="toggleTreeNode('rightTables')">
+                                <div class="flex items-center">
+                                    <span class="icon-folder-open mr-2" id="rightTablesIcon"></span>
+                                    <span class="material-symbols-outlined text-sm mr-2 text-blue-600">table_view</span>
+                                    <span class="font-medium">Tables</span>
+                                    <span class="ml-2 text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">4</span>
+                                </div>
+                            </div>
+                            <div id="rightTables" class="mt-1">
+                                <!-- Customer Table - Identical -->
+                                <div class="tree-item level-2 status-identical cursor-pointer" onclick="selectObject('Customer', 'table')" data-name="customer" data-status="identical">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                            <span class="material-symbols-outlined text-sm mr-2 text-gray-600">table_view</span>
+                                            <span>Customer</span>
+                                            <span class="text-xs text-gray-500 ml-2">4 cols</span>
+                                        </div>
+                                        <div class="inline-actions">
+                                            <span class="action-btn bg-gray-100 text-gray-600 text-xs">Same</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Order Table - Conflict -->
+                                <div class="tree-item level-2 status-conflict cursor-pointer" onclick="selectObject('Order', 'table')" data-name="order" data-status="conflict">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                            <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">warning</span>
+                                            <span>Order</span>
+                                            <span class="text-xs text-gray-500 ml-2">6 cols</span>
+                                        </div>
+                                        <div class="inline-actions">
+                                            <span class="action-btn bg-green-100 text-green-800 hover:bg-green-200" onclick="event.stopPropagation(); quickResolve('Order', 'right')">
+                                                Use →
+                                            </span>
+                                            <span class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200" onclick="event.stopPropagation(); customMerge('Order')">
+                                                ⚙️
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- OrderItem Table - Conflict -->
+                                <div class="tree-item level-2 status-conflict cursor-pointer" onclick="selectObject('OrderItem', 'table')" data-name="orderitem" data-status="conflict">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                            <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">warning</span>
+                                            <span>OrderItem</span>
+                                            <span class="text-xs text-gray-500 ml-2">5 cols</span>
+                                        </div>
+                                        <div class="inline-actions">
+                                            <span class="action-btn bg-green-100 text-green-800 hover:bg-green-200" onclick="event.stopPropagation(); quickResolve('OrderItem', 'right')">
+                                                Use →
+                                            </span>
+                                            <span class="action-btn bg-gray-100 text-gray-600 hover:bg-gray-200" onclick="event.stopPropagation(); customMerge('OrderItem')">
+                                                ⚙️
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Product Table - Present in Right -->
+                                <div class="tree-item level-2 status-missing cursor-pointer" onclick="selectObject('Product', 'table')" data-name="product" data-status="missing">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                            <span class="material-symbols-outlined text-sm mr-2 text-red-600">remove_circle</span>
+                                            <span>Product</span>
+                                            <span class="text-xs text-gray-500 ml-2">5 cols</span>
+                                        </div>
+                                        <div class="inline-actions">
+                                            <span class="action-btn bg-green-100 text-green-800 hover:bg-green-200" onclick="event.stopPropagation(); quickResolve('Product', 'add')">
+                                                Add
+                                            </span>
+                                            <span class="action-btn bg-red-100 text-red-800 hover:bg-red-200" onclick="event.stopPropagation(); quickResolve('Product', 'ignore')">
+                                                Ignore
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TempOrder Table - Not in Right -->
+                                <div class="tree-item level-2 status-added cursor-pointer opacity-50" onclick="selectObject('TempOrder', 'table')" data-name="temporder" data-status="added">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()" disabled>
+                                            <span class="material-symbols-outlined text-sm mr-2 text-gray-400">add_circle_outline</span>
+                                            <span class="text-gray-400">TempOrder</span>
+                                            <span class="text-xs text-gray-400 ml-2">Not in Right</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Views Section -->
+                        <div class="tree-item level-1 py-2 filter-group" data-type="views">
+                            <div class="flex items-center justify-between cursor-pointer" onclick="toggleTreeNode('rightViews')">
+                                <div class="flex items-center">
+                                    <span class="icon-folder-open mr-2" id="rightViewsIcon"></span>
+                                    <span class="material-symbols-outlined text-sm mr-2 text-purple-600">visibility</span>
+                                    <span class="font-medium">Views</span>
+                                    <span class="ml-2 text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">3</span>
+                                </div>
+                            </div>
+                            <div id="rightViews" class="mt-1">
+                                <!-- CustomerOrders View - Identical -->
+                                <div class="tree-item level-2 status-identical cursor-pointer" onclick="selectObject('CustomerOrders', 'view')" data-name="customerorders" data-status="identical">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                            <span class="material-symbols-outlined text-sm mr-2 text-gray-600">visibility</span>
+                                            <span>CustomerOrders</span>
+                                            <span class="text-xs text-gray-500 ml-2">View</span>
+                                        </div>
+                                        <div class="inline-actions">
+                                            <span class="action-btn bg-gray-100 text-gray-600 text-xs">Same</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- OrderSummary View - Conflict -->
+                                <div class="tree-item level-2 status-conflict cursor-pointer" onclick="selectObject('OrderSummary', 'view')" data-name="ordersummary" data-status="conflict">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                            <span class="material-symbols-outlined text-sm mr-2 text-yellow-600">warning</span>
+                                            <span>OrderSummary</span>
+                                            <span class="text-xs text-gray-500 ml-2">View</span>
+                                        </div>
+                                        <div class="inline-actions">
+                                            <span class="action-btn bg-green-100 text-green-800 hover:bg-green-200" onclick="event.stopPropagation(); quickResolve('OrderSummary', 'right')">
+                                                Use →
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ProductCatalog View - New -->
+                                <div class="tree-item level-2 status-missing cursor-pointer" onclick="selectObject('ProductCatalog', 'view')" data-name="productcatalog" data-status="missing">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" class="mr-2 object-checkbox" onchange="updateBulkActions()">
+                                            <span class="material-symbols-outlined text-sm mr-2 text-red-600">remove_circle</span>
+                                            <span>ProductCatalog</span>
+                                            <span class="text-xs text-gray-500 ml-2">View</span>
+                                        </div>
+                                        <div class="inline-actions">
+                                            <span class="action-btn bg-green-100 text-green-800 hover:bg-green-200" onclick="event.stopPropagation(); quickResolve('ProductCatalog', 'add')">
+                                                Add
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div> <!-- End comparison-main -->
+
+            <!-- Enhanced Property Pane -->
+        <div id="propertyPane" class="property-pane-full bg-white border-t border-gray-200 overflow-y-auto">
+            <div class="p-4 border-b border-gray-200 bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-semibold text-gray-900" id="propertyTitle">Object Properties</h3>
+                        <p class="text-sm text-gray-600" id="propertySubtitle">Select an object above to view detailed properties and resolve conflicts</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="togglePropertyPane()" class="tooltip text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200" data-tooltip="Collapse Properties">
+                            ⬇️ Collapse
+                        </button>
+                        <button onclick="detachPropertyPane()" class="tooltip text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200" data-tooltip="Open in New Window">
+                            🪟 Detach
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="propertyContent" class="p-4">
+                <!-- Default Content -->
+                <div class="grid grid-cols-3 gap-6 h-full">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h4 class="font-medium text-blue-900 mb-3 flex items-center">
+                            <span class="material-symbols-outlined mr-2">arrow_back</span>
+                            Left Model (Source)
+                        </h4>
+                        <p class="text-sm text-blue-700 mb-2">CustomerDB_v1.2</p>
+                        <div class="text-xs text-gray-600">
+                            <div>• Tables: 4</div>
+                            <div>• Views: 2</div>
+                            <div>• Keys: 6</div>
+                            <div>• Relationships: 2</div>
+                            <div>• Indexes: 4</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <h4 class="font-medium text-purple-900 mb-3 flex items-center">
+                            <span class="material-symbols-outlined mr-2">merge</span>
+                            Merge Resolution
+                        </h4>
+                        <p class="text-sm text-purple-700 mb-2">CustomerDB_v1.3_merged</p>
+                        <div class="text-xs text-gray-600">
+                            <div>• Conflicts: 8 pending</div>
+                            <div>• Resolved: 0</div>
+                            <div>• Auto-merge available: 3 items</div>
+                            <div>• Manual review: 5 items</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <h4 class="font-medium text-green-900 mb-3 flex items-center">
+                            <span class="material-symbols-outlined mr-2">arrow_forward</span>
+                            Right Model (Target)
+                        </h4>
+                        <p class="text-sm text-green-700 mb-2">CustomerDB_v1.3</p>
+                        <div class="text-xs text-gray-600">
+                            <div>• Tables: 4</div>
+                            <div>• Views: 3</div>
+                            <div>• Keys: 7</div>
+                            <div>• Relationships: 3</div>
+                            <div>• Indexes: 5</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-gray-500">Select any object above to view detailed comparison and resolution options</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu">
+        <div class="context-menu-item" onclick="contextAction('resolve-left')">
+            <span class="material-symbols-outlined text-sm mr-2">arrow_back</span>
+            Accept Left Model
+        </div>
+        <div class="context-menu-item" onclick="contextAction('resolve-right')">
+            <span class="material-symbols-outlined text-sm mr-2">arrow_forward</span>
+            Accept Right Model
+        </div>
+        <div class="context-menu-item" onclick="contextAction('custom-merge')">
+            <span class="material-symbols-outlined text-sm mr-2">tune</span>
+            Custom Merge...
+        </div>
+        <div class="context-menu-item" onclick="contextAction('view-details')">
+            <span class="material-symbols-outlined text-sm mr-2">info</span>
+            View Details
+        </div>
+        <div class="context-menu-item" onclick="contextAction('add-note')">
+            <span class="material-symbols-outlined text-sm mr-2">note_add</span>
+            Add Note
+        </div>
+    </div>
+
+    <!-- Enhanced Reporting Drawer -->
+    <div id="reportDrawer" class="fixed top-0 right-0 h-full w-96 bg-white border-l border-gray-200 shadow-lg slide-drawer z-50">
+        <!-- Report drawer content remains similar but enhanced -->
+    </div>
+
+    <script>
+        let currentObject = null;
+        let selectedObjects = new Set();
+        let showPanelCollapsed = false;
+        let conflicts = { pending: 8, resolved: 0 };
+
+        // Comprehensive Sample Data
+        const sampleData = {
+            'Customer': {
+                type: 'table',
+                status: 'identical',
+                left: {
+                    columns: [
+                        { name: 'CustomerID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'FirstName', dataType: 'VARCHAR(50)', constraints: '', nullable: false },
+                        { name: 'LastName', dataType: 'VARCHAR(50)', constraints: '', nullable: false },
+                        { name: 'Email', dataType: 'VARCHAR(100)', constraints: 'UK', nullable: false }
+                    ]
+                },
+                right: {
+                    columns: [
+                        { name: 'CustomerID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'FirstName', dataType: 'VARCHAR(50)', constraints: '', nullable: false },
+                        { name: 'LastName', dataType: 'VARCHAR(50)', constraints: '', nullable: false },
+                        { name: 'Email', dataType: 'VARCHAR(100)', constraints: 'UK', nullable: false }
+                    ]
+                }
+            },
+            'Order': {
+                type: 'table',
+                status: 'conflict',
+                left: {
+                    columns: [
+                        { name: 'OrderID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'CustomerID', dataType: 'INT', constraints: 'FK', nullable: false },
+                        { name: 'OrderTotal', dataType: 'DECIMAL(10,2)', constraints: '', nullable: false },
+                        { name: 'Status', dataType: 'VARCHAR(20)', constraints: '', nullable: false },
+                        { name: 'CreatedAt', dataType: 'DATETIME', constraints: '', nullable: false }
+                    ]
+                },
+                right: {
+                    columns: [
+                        { name: 'OrderID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'CustomerID', dataType: 'INT', constraints: 'FK', nullable: false },
+                        { name: 'OrderDate', dataType: 'DATE', constraints: '', nullable: false, isNew: true },
+                        { name: 'OrderTotal', dataType: 'DECIMAL(12,2)', constraints: '', nullable: false, isModified: true },
+                        { name: 'Status', dataType: 'VARCHAR(30)', constraints: '', nullable: false, isModified: true },
+                        { name: 'CreatedAt', dataType: 'DATETIME', constraints: '', nullable: false }
+                    ]
+                }
+            },
+            'OrderItem': {
+                type: 'table',
+                status: 'conflict',
+                left: {
+                    columns: [
+                        { name: 'OrderItemID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'OrderID', dataType: 'INT', constraints: 'FK', nullable: false },
+                        { name: 'ProductID', dataType: 'INT', constraints: 'FK', nullable: false },
+                        { name: 'Quantity', dataType: 'INT', constraints: '', nullable: false }
+                    ]
+                },
+                right: {
+                    columns: [
+                        { name: 'OrderItemID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'OrderID', dataType: 'INT', constraints: 'FK', nullable: false },
+                        { name: 'ProductID', dataType: 'INT', constraints: 'FK', nullable: false },
+                        { name: 'Quantity', dataType: 'INT', constraints: '', nullable: false },
+                        { name: 'UnitPrice', dataType: 'DECIMAL(10,2)', constraints: '', nullable: false, isNew: true }
+                    ]
+                }
+            },
+            'TempOrder': {
+                type: 'table',
+                status: 'missing',
+                left: {
+                    columns: [
+                        { name: 'TempID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'CustomerID', dataType: 'INT', constraints: 'FK', nullable: false },
+                        { name: 'TempData', dataType: 'TEXT', constraints: '', nullable: true }
+                    ]
+                },
+                right: null
+            },
+            'Product': {
+                type: 'table',
+                status: 'added',
+                left: null,
+                right: {
+                    columns: [
+                        { name: 'ProductID', dataType: 'INT', constraints: 'PK', nullable: false },
+                        { name: 'ProductName', dataType: 'VARCHAR(100)', constraints: '', nullable: false },
+                        { name: 'Category', dataType: 'VARCHAR(50)', constraints: '', nullable: true },
+                        { name: 'Price', dataType: 'DECIMAL(10,2)', constraints: '', nullable: false },
+                        { name: 'InStock', dataType: 'BIT', constraints: '', nullable: false }
+                    ]
+                }
+            },
+            'CustomerOrders': {
+                type: 'view',
+                status: 'identical',
+                left: { definition: 'SELECT c.CustomerID, c.FirstName, c.LastName, COUNT(o.OrderID) as OrderCount FROM Customer c LEFT JOIN Order o ON c.CustomerID = o.CustomerID GROUP BY c.CustomerID, c.FirstName, c.LastName' },
+                right: { definition: 'SELECT c.CustomerID, c.FirstName, c.LastName, COUNT(o.OrderID) as OrderCount FROM Customer c LEFT JOIN Order o ON c.CustomerID = o.CustomerID GROUP BY c.CustomerID, c.FirstName, c.LastName' }
+            },
+            'OrderSummary': {
+                type: 'view',
+                status: 'conflict',
+                left: { definition: 'SELECT OrderID, CustomerID, OrderTotal, Status FROM Order WHERE Status = \'Active\'' },
+                right: { definition: 'SELECT OrderID, CustomerID, OrderDate, OrderTotal, Status FROM Order WHERE Status IN (\'Active\', \'Pending\')', isModified: true }
+            },
+            'ProductCatalog': {
+                type: 'view',
+                status: 'added',
+                left: null,
+                right: { definition: 'SELECT ProductID, ProductName, Category, Price FROM Product WHERE InStock = 1' }
+            },
+            'PK_Customer': {
+                type: 'key',
+                status: 'identical',
+                left: { keyType: 'Primary Key', table: 'Customer', columns: ['CustomerID'] },
+                right: { keyType: 'Primary Key', table: 'Customer', columns: ['CustomerID'] }
+            },
+            'FK_Order_Customer': {
+                type: 'key',
+                status: 'conflict',
+                left: { keyType: 'Foreign Key', table: 'Order', columns: ['CustomerID'], references: 'Customer(CustomerID)', onDelete: 'CASCADE' },
+                right: { keyType: 'Foreign Key', table: 'Order', columns: ['CustomerID'], references: 'Customer(CustomerID)', onDelete: 'RESTRICT', isModified: true }
+            },
+            'UK_Customer_Email': {
+                type: 'key',
+                status: 'missing',
+                left: { keyType: 'Unique Key', table: 'Customer', columns: ['Email'] },
+                right: null
+            },
+            'Customer-Order': {
+                type: 'relationship',
+                status: 'identical',
+                left: { fromTable: 'Customer', toTable: 'Order', cardinality: '1:M', foreignKey: 'FK_Order_Customer' },
+                right: { fromTable: 'Customer', toTable: 'Order', cardinality: '1:M', foreignKey: 'FK_Order_Customer' }
+            },
+            'Order-OrderItem': {
+                type: 'relationship',
+                status: 'conflict',
+                left: { fromTable: 'Order', toTable: 'OrderItem', cardinality: '1:M', foreignKey: 'FK_OrderItem_Order' },
+                right: { fromTable: 'Order', toTable: 'OrderItem', cardinality: '1:M', foreignKey: 'FK_OrderItem_Order_V2', isModified: true }
+            },
+            'IDX_Customer_LastName': {
+                type: 'index',
+                status: 'identical',
+                left: { indexType: 'Non-Clustered', table: 'Customer', columns: ['LastName'], isUnique: false },
+                right: { indexType: 'Non-Clustered', table: 'Customer', columns: ['LastName'], isUnique: false }
+            },
+            'IDX_Order_Date': {
+                type: 'index',
+                status: 'conflict',
+                left: { indexType: 'Non-Clustered', table: 'Order', columns: ['CreatedAt'], isUnique: false },
+                right: { indexType: 'Non-Clustered', table: 'Order', columns: ['OrderDate', 'CreatedAt'], isUnique: false, isModified: true }
+            },
+            'IDX_Order_Status': {
+                type: 'index',
+                status: 'missing',
+                left: { indexType: 'Non-Clustered', table: 'Order', columns: ['Status'], isUnique: false },
+                right: null
+            }
+        };
+
+        // Enhanced initialization
+        function startComparison() {
+            console.log('Starting enhanced comparison...');
+
+            const leftModel = document.getElementById('leftModel').value;
+            const rightModel = document.getElementById('rightModel').value;
+
+            if (!leftModel || !rightModel) {
+                showNotification('Please select both source and target models', 'error');
+                return;
+            }
+
+            // Switch views with animation
+            const modelSelection = document.getElementById('modelSelection');
+            const comparisonView = document.getElementById('comparisonView');
+
+            modelSelection.classList.add('hidden');
+            comparisonView.classList.remove('hidden');
+
+            // Initialize enhanced features
+            setTimeout(() => {
+                initializeEnhancedFeatures();
+                showNotification('Comparison initialized successfully', 'success');
+            }, 100);
+        }
+
+        function initializeEnhancedFeatures() {
+            // Initialize keyboard shortcuts
+            initKeyboardShortcuts();
+
+            // Setup context menu
+            setupContextMenu();
+
+            // Initialize progress tracking
+            updateProgress();
+
+            // Setup auto-save
+            setupAutoSave();
+        }
+
+        // Show Options Panel Management
+        function toggleShowPanel() {
+            const panel = document.getElementById('showPanel');
+            const main = document.getElementById('comparisonMain');
+
+            showPanelCollapsed = !showPanelCollapsed;
+
+            if (showPanelCollapsed) {
+                panel.classList.add('collapsed');
+                main.classList.add('panel-collapsed');
+            } else {
+                panel.classList.remove('collapsed');
+                main.classList.remove('panel-collapsed');
+            }
+        }
+
+        // Bulk Actions Management
+        function updateBulkActions() {
+            const checkboxes = document.querySelectorAll('.object-checkbox:checked');
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+
+            selectedObjects.clear();
+            checkboxes.forEach(cb => {
+                const item = cb.closest('.tree-item');
+                if (item) selectedObjects.add(item.dataset.name);
+            });
+
+            if (selectedObjects.size > 0) {
+                bulkActions.classList.add('show');
+                selectedCount.textContent = `${selectedObjects.size} items selected`;
+            } else {
+                bulkActions.classList.remove('show');
+            }
+        }
+
+        // Quick Resolution Functions
+        function quickResolve(objectName, action) {
+            console.log(`Quick resolve: ${objectName} -> ${action}`);
+
+            // Update visual state
+            const elements = document.querySelectorAll(`[data-name="${objectName}"]`);
+            elements.forEach(el => {
+                el.classList.remove('status-conflict', 'status-missing');
+                el.classList.add('status-identical');
+
+                // Update status indicator
+                const indicator = el.querySelector('.w-3.h-3');
+                if (indicator) {
+                    indicator.className = 'w-3 h-3 bg-green-500 rounded-full mr-2';
+                }
+            });
+
+            // Update conflicts count
+            conflicts.pending = Math.max(0, conflicts.pending - 1);
+            conflicts.resolved++;
+            updateProgress();
+
+            showNotification(`${objectName} resolved: ${action}`, 'success');
+        }
+
+        // Custom Merge Dialog
+        function customMerge(objectName) {
+            console.log(`Opening custom merge for: ${objectName}`);
+            showNotification(`Custom merge editor for ${objectName} (feature coming soon)`, 'info');
+        }
+
+        // Keyboard Shortcuts
+        function initKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey) {
+                    switch(e.key) {
+                        case 'l':
+                            e.preventDefault();
+                            bulkAcceptLeft();
+                            break;
+                        case 'r':
+                            e.preventDefault();
+                            bulkAcceptRight();
+                            break;
+                        case 'm':
+                            e.preventDefault();
+                            smartMerge();
+                            break;
+                        case 'f':
+                            e.preventDefault();
+                            document.getElementById('quickSearch').focus();
+                            break;
+                    }
+                }
+            });
+        }
+
+        // Context Menu Setup
+        function setupContextMenu() {
+            document.addEventListener('contextmenu', (e) => {
+                const treeItem = e.target.closest('.tree-item.level-2');
+                if (treeItem) {
+                    e.preventDefault();
+                    showContextMenu(e.pageX, e.pageY, treeItem.dataset.name);
+                }
+            });
+
+            document.addEventListener('click', () => {
+                hideContextMenu();
+            });
+        }
+
+        function showContextMenu(x, y, objectName) {
+            const menu = document.getElementById('contextMenu');
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            menu.style.display = 'block';
+            menu.dataset.target = objectName;
+        }
+
+        function hideContextMenu() {
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        function contextAction(action) {
+            const menu = document.getElementById('contextMenu');
+            const objectName = menu.dataset.target;
+            console.log(`Context action: ${action} on ${objectName}`);
+            hideContextMenu();
+        }
+
+        // Progress Tracking
+        function updateProgress() {
+            const total = conflicts.pending + conflicts.resolved;
+            const progress = total > 0 ? (conflicts.resolved / total) * 100 : 0;
+
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent =
+                conflicts.pending > 0 ? `${conflicts.pending} conflicts pending` : 'All conflicts resolved';
+        }
+
+        // Notification System
+        function showNotification(message, type = 'info') {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+                type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+                type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+                'bg-blue-100 text-blue-800 border border-blue-200'
+            }`;
+            toast.textContent = message;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Filter Functions
+        function quickFilter() {
+            const searchTerm = document.getElementById('quickSearch').value.toLowerCase();
+            applyFilters(searchTerm);
+        }
+
+        function applyFilters(searchTerm = '') {
+            // Enhanced filtering logic with animation
+            console.log('Applying enhanced filters...');
+        }
+
+        // Enhanced Object Selection with Property Display
+        function selectObject(objectName, objectType) {
+            currentObject = { name: objectName, type: objectType };
+
+            // Update property pane title
+            document.getElementById('propertyTitle').textContent = `${objectType.charAt(0).toUpperCase() + objectType.slice(1)}: ${objectName}`;
+            document.getElementById('propertySubtitle').textContent = `Detailed comparison and resolution options`;
+
+            // Show detailed properties
+            showDetailedProperties(objectName, objectType);
+
+            // Highlight selected item
+            document.querySelectorAll('.tree-item.level-2').forEach(item => {
+                item.classList.remove('bg-blue-100');
+            });
+            document.querySelectorAll(`[data-name="${objectName}"]`).forEach(item => {
+                item.classList.add('bg-blue-100');
+            });
+        }
+
+        function showDetailedProperties(objectName, objectType) {
+            const propertyContent = document.getElementById('propertyContent');
+            const data = sampleData[objectName];
+
+            if (!data) {
+                propertyContent.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <span class="material-symbols-outlined text-4xl mb-2 block">info</span>
+                        <p>No detailed properties available for ${objectName}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (data.type === 'table') {
+                propertyContent.innerHTML = generateTableProperties(objectName, data);
+            } else if (data.type === 'view') {
+                propertyContent.innerHTML = generateViewProperties(objectName, data);
+            } else if (data.type === 'key') {
+                propertyContent.innerHTML = generateKeyProperties(objectName, data);
+            } else if (data.type === 'relationship') {
+                propertyContent.innerHTML = generateRelationshipProperties(objectName, data);
+            } else if (data.type === 'index') {
+                propertyContent.innerHTML = generateIndexProperties(objectName, data);
+            }
+        }
+
+        function generateTableProperties(objectName, data) {
+            const leftCols = data.left ? data.left.columns.length : 0;
+            const rightCols = data.right ? data.right.columns.length : 0;
+            const status = data.status;
+
+            let leftContent = data.left ? `
+                <h5 class="font-medium text-gray-700 mb-3">Left Model (${leftCols} columns)</h5>
+                <div class="space-y-1 text-sm max-h-48 overflow-y-auto">
+                    ${data.left.columns.map(col => `
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <div>
+                                <div class="font-medium">${col.name}</div>
+                                <div class="text-xs text-gray-500">${col.constraints ? col.constraints + ' ' : ''}${col.nullable ? '' : 'NOT NULL'}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-gray-600">${col.dataType}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<div class="text-center text-gray-400 py-8 bg-gray-50 rounded">Not present in Left Model</div>';
+
+            let rightContent = data.right ? `
+                <h5 class="font-medium text-gray-700 mb-3">Right Model (${rightCols} columns)</h5>
+                <div class="space-y-1 text-sm max-h-48 overflow-y-auto">
+                    ${data.right.columns.map(col => `
+                        <div class="flex justify-between py-2 border-b border-gray-100 ${col.isNew ? 'bg-blue-50' : col.isModified ? 'bg-yellow-50' : ''}">
+                            <div>
+                                <div class="font-medium">${col.name}</div>
+                                <div class="text-xs ${col.isNew ? 'text-blue-600' : col.isModified ? 'text-yellow-600' : 'text-gray-500'}">
+                                    ${col.constraints ? col.constraints + ' ' : ''}${col.nullable ? '' : 'NOT NULL'}
+                                    ${col.isNew ? ' (NEW)' : col.isModified ? ' (MODIFIED)' : ''}
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-gray-600">${col.dataType}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<div class="text-center text-gray-400 py-8 bg-gray-50 rounded">Not present in Right Model</div>';
+
+            let mergeContent = '';
+            if (status === 'identical') {
+                mergeContent = `
+                    <div class="text-center py-8">
+                        <span class="material-symbols-outlined text-3xl text-gray-600 mb-2 block">check_circle</span>
+                        <h5 class="font-medium text-gray-700 mb-2">Identical</h5>
+                        <p class="text-sm text-gray-500">No conflicts to resolve</p>
+                    </div>
+                `;
+            } else if (status === 'conflict') {
+                mergeContent = `
+                    <h5 class="font-medium text-gray-700 mb-3">Resolve Conflict</h5>
+                    <div class="space-y-2">
+                        <button onclick="resolveConflict('${objectName}', 'left')" class="w-full bg-blue-50 text-blue-800 p-3 rounded hover:bg-blue-100 text-left border border-blue-200">
+                            <div class="font-medium">← Use Left Model</div>
+                            <div class="text-sm text-blue-600">Keep ${leftCols} columns from source</div>
+                        </button>
+                        <button onclick="resolveConflict('${objectName}', 'right')" class="w-full bg-green-50 text-green-800 p-3 rounded hover:bg-green-100 text-left border border-green-200">
+                            <div class="font-medium">Use Right Model →</div>
+                            <div class="text-sm text-green-600">Keep ${rightCols} columns from target</div>
+                        </button>
+                        <button onclick="customMerge('${objectName}')" class="w-full bg-gray-50 text-gray-800 p-3 rounded hover:bg-gray-100 text-left border border-gray-200">
+                            <div class="font-medium">⚙️ Custom Merge</div>
+                            <div class="text-sm text-gray-600">Manually select columns</div>
+                        </button>
+                    </div>
+                `;
+            } else if (status === 'missing') {
+                mergeContent = `
+                    <h5 class="font-medium text-gray-700 mb-3">Missing Object</h5>
+                    <div class="space-y-2">
+                        <button onclick="resolveConflict('${objectName}', 'keep')" class="w-full bg-green-50 text-green-800 p-3 rounded hover:bg-green-100 text-left border border-green-200">
+                            <div class="font-medium">✓ Keep in Merge</div>
+                            <div class="text-sm text-green-600">Include in merged model</div>
+                        </button>
+                        <button onclick="resolveConflict('${objectName}', 'remove')" class="w-full bg-red-50 text-red-800 p-3 rounded hover:bg-red-100 text-left border border-red-200">
+                            <div class="font-medium">🗑️ Remove</div>
+                            <div class="text-sm text-red-600">Exclude from merged model</div>
+                        </button>
+                    </div>
+                `;
+            } else if (status === 'added') {
+                mergeContent = `
+                    <h5 class="font-medium text-gray-700 mb-3">New Object</h5>
+                    <div class="space-y-2">
+                        <button onclick="resolveConflict('${objectName}', 'add')" class="w-full bg-blue-50 text-blue-800 p-3 rounded hover:bg-blue-100 text-left border border-blue-200">
+                            <div class="font-medium">+ Add to Merge</div>
+                            <div class="text-sm text-blue-600">Include new object</div>
+                        </button>
+                        <button onclick="resolveConflict('${objectName}', 'ignore')" class="w-full bg-gray-50 text-gray-800 p-3 rounded hover:bg-gray-100 text-left border border-gray-200">
+                            <div class="font-medium">⊘ Ignore</div>
+                            <div class="text-sm text-gray-600">Do not include</div>
+                        </button>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="grid grid-cols-3 gap-6 h-full">
+                    <div class="bg-blue-50 rounded-lg p-4">${leftContent}</div>
+                    <div class="bg-purple-50 rounded-lg p-4">${mergeContent}</div>
+                    <div class="bg-green-50 rounded-lg p-4">${rightContent}</div>
+                </div>
+            `;
+        }
+
+        function generateViewProperties(objectName, data) {
+            const status = data.status;
+
+            let leftContent = data.left ? `
+                <h5 class="font-medium text-gray-700 mb-3">Left Model Definition</h5>
+                <div class="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto max-h-32">
+                    ${data.left.definition}
+                </div>
+            ` : '<div class="text-center text-gray-400 py-8">Not present in Left Model</div>';
+
+            let rightContent = data.right ? `
+                <h5 class="font-medium text-gray-700 mb-3">Right Model Definition</h5>
+                <div class="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto max-h-32 ${data.right.isModified ? 'bg-yellow-100' : ''}">
+                    ${data.right.definition}
+                    ${data.right.isModified ? '<div class="text-yellow-600 mt-2 text-xs">MODIFIED</div>' : ''}
+                </div>
+            ` : '<div class="text-center text-gray-400 py-8">Not present in Right Model</div>';
+
+            let mergeContent = status === 'identical' ? `
+                <div class="text-center py-8">
+                    <span class="material-symbols-outlined text-3xl text-gray-600 mb-2 block">check_circle</span>
+                    <p class="text-sm text-gray-500">Definitions are identical</p>
+                </div>
+            ` : `
+                <h5 class="font-medium text-gray-700 mb-3">Resolve Difference</h5>
+                <div class="space-y-2">
+                    <button onclick="resolveConflict('${objectName}', 'left')" class="w-full bg-blue-50 text-blue-800 p-2 rounded text-sm hover:bg-blue-100">
+                        Use Left Definition
+                    </button>
+                    <button onclick="resolveConflict('${objectName}', 'right')" class="w-full bg-green-50 text-green-800 p-2 rounded text-sm hover:bg-green-100">
+                        Use Right Definition
+                    </button>
+                </div>
+            `;
+
+            return `
+                <div class="grid grid-cols-3 gap-6 h-full">
+                    <div class="bg-blue-50 rounded-lg p-4">${leftContent}</div>
+                    <div class="bg-purple-50 rounded-lg p-4">${mergeContent}</div>
+                    <div class="bg-green-50 rounded-lg p-4">${rightContent}</div>
+                </div>
+            `;
+        }
+
+        function generateKeyProperties(objectName, data) {
+            // Similar pattern for keys...
+            return `
+                <div class="grid grid-cols-3 gap-6 h-full">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h5 class="font-medium text-gray-700 mb-3">Left Model</h5>
+                        ${data.left ? `
+                            <div class="space-y-2 text-sm">
+                                <div><strong>Type:</strong> ${data.left.keyType}</div>
+                                <div><strong>Table:</strong> ${data.left.table}</div>
+                                <div><strong>Columns:</strong> ${data.left.columns.join(', ')}</div>
+                                ${data.left.references ? `<div><strong>References:</strong> ${data.left.references}</div>` : ''}
+                                ${data.left.onDelete ? `<div><strong>On Delete:</strong> ${data.left.onDelete}</div>` : ''}
+                            </div>
+                        ` : '<div class="text-gray-400">Not present</div>'}
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <h5 class="font-medium text-gray-700 mb-3">Resolution</h5>
+                        ${data.status === 'identical' ?
+                            '<div class="text-center text-gray-500">No conflicts</div>' :
+                            `<div class="space-y-2">
+                                <button onclick="resolveConflict('${objectName}', 'left')" class="w-full bg-blue-100 text-blue-800 p-2 rounded text-sm">Use Left</button>
+                                <button onclick="resolveConflict('${objectName}', 'right')" class="w-full bg-green-100 text-green-800 p-2 rounded text-sm">Use Right</button>
+                            </div>`
+                        }
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <h5 class="font-medium text-gray-700 mb-3">Right Model</h5>
+                        ${data.right ? `
+                            <div class="space-y-2 text-sm ${data.right.isModified ? 'bg-yellow-100 p-2 rounded' : ''}">
+                                <div><strong>Type:</strong> ${data.right.keyType}</div>
+                                <div><strong>Table:</strong> ${data.right.table}</div>
+                                <div><strong>Columns:</strong> ${data.right.columns.join(', ')}</div>
+                                ${data.right.references ? `<div><strong>References:</strong> ${data.right.references}</div>` : ''}
+                                ${data.right.onDelete ? `<div><strong>On Delete:</strong> ${data.right.onDelete} ${data.right.isModified ? '<span class="text-yellow-600">(CHANGED)</span>' : ''}</div>` : ''}
+                            </div>
+                        ` : '<div class="text-gray-400">Not present</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateRelationshipProperties(objectName, data) {
+            // Similar pattern for relationships...
+            return `
+                <div class="grid grid-cols-3 gap-6 h-full">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h5 class="font-medium text-gray-700 mb-3">Left Model</h5>
+                        ${data.left ? `
+                            <div class="space-y-2 text-sm">
+                                <div><strong>From:</strong> ${data.left.fromTable}</div>
+                                <div><strong>To:</strong> ${data.left.toTable}</div>
+                                <div><strong>Cardinality:</strong> ${data.left.cardinality}</div>
+                                <div><strong>Foreign Key:</strong> ${data.left.foreignKey}</div>
+                            </div>
+                        ` : '<div class="text-gray-400">Not present</div>'}
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <h5 class="font-medium text-gray-700 mb-3">Resolution</h5>
+                        ${data.status === 'identical' ?
+                            '<div class="text-center text-gray-500">No conflicts</div>' :
+                            `<div class="space-y-2">
+                                <button onclick="resolveConflict('${objectName}', 'left')" class="w-full bg-blue-100 text-blue-800 p-2 rounded text-sm">Use Left</button>
+                                <button onclick="resolveConflict('${objectName}', 'right')" class="w-full bg-green-100 text-green-800 p-2 rounded text-sm">Use Right</button>
+                            </div>`
+                        }
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <h5 class="font-medium text-gray-700 mb-3">Right Model</h5>
+                        ${data.right ? `
+                            <div class="space-y-2 text-sm ${data.right.isModified ? 'bg-yellow-100 p-2 rounded' : ''}">
+                                <div><strong>From:</strong> ${data.right.fromTable}</div>
+                                <div><strong>To:</strong> ${data.right.toTable}</div>
+                                <div><strong>Cardinality:</strong> ${data.right.cardinality}</div>
+                                <div><strong>Foreign Key:</strong> ${data.right.foreignKey} ${data.right.isModified ? '<span class="text-yellow-600">(CHANGED)</span>' : ''}</div>
+                            </div>
+                        ` : '<div class="text-gray-400">Not present</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateIndexProperties(objectName, data) {
+            // Similar pattern for indexes...
+            return `
+                <div class="grid grid-cols-3 gap-6 h-full">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h5 class="font-medium text-gray-700 mb-3">Left Model</h5>
+                        ${data.left ? `
+                            <div class="space-y-2 text-sm">
+                                <div><strong>Type:</strong> ${data.left.indexType}</div>
+                                <div><strong>Table:</strong> ${data.left.table}</div>
+                                <div><strong>Columns:</strong> ${data.left.columns.join(', ')}</div>
+                                <div><strong>Unique:</strong> ${data.left.isUnique ? 'Yes' : 'No'}</div>
+                            </div>
+                        ` : '<div class="text-gray-400">Not present</div>'}
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <h5 class="font-medium text-gray-700 mb-3">Resolution</h5>
+                        ${data.status === 'identical' ?
+                            '<div class="text-center text-gray-500">No conflicts</div>' :
+                            `<div class="space-y-2">
+                                <button onclick="resolveConflict('${objectName}', 'left')" class="w-full bg-blue-100 text-blue-800 p-2 rounded text-sm">Use Left</button>
+                                <button onclick="resolveConflict('${objectName}', 'right')" class="w-full bg-green-100 text-green-800 p-2 rounded text-sm">Use Right</button>
+                            </div>`
+                        }
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <h5 class="font-medium text-gray-700 mb-3">Right Model</h5>
+                        ${data.right ? `
+                            <div class="space-y-2 text-sm ${data.right.isModified ? 'bg-yellow-100 p-2 rounded' : ''}">
+                                <div><strong>Type:</strong> ${data.right.indexType}</div>
+                                <div><strong>Table:</strong> ${data.right.table}</div>
+                                <div><strong>Columns:</strong> ${data.right.columns.join(', ')} ${data.right.isModified ? '<span class="text-yellow-600">(MODIFIED)</span>' : ''}</div>
+                                <div><strong>Unique:</strong> ${data.right.isUnique ? 'Yes' : 'No'}</div>
+                            </div>
+                        ` : '<div class="text-gray-400">Not present</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function resolveConflict(objectName, choice) {
+            conflicts.pending = Math.max(0, conflicts.pending - 1);
+            conflicts.resolved++;
+            updateProgress();
+
+            // Update visual state
+            const elements = document.querySelectorAll(`[data-name="${objectName}"]`);
+            elements.forEach(el => {
+                el.classList.remove('status-conflict', 'status-missing', 'status-added');
+                el.classList.add('status-identical');
+
+                // Update icon
+                const icon = el.querySelector('.material-symbols-outlined');
+                if (icon && icon.textContent === 'warning') {
+                    icon.textContent = 'check_circle';
+                    icon.className = 'material-symbols-outlined text-sm mr-2 text-gray-600';
+                }
+            });
+
+            showNotification(`${objectName} resolved: ${choice}`, 'success');
+
+            // Refresh property view
+            selectObject(objectName, sampleData[objectName]?.type || 'object');
+        }
+
+        // Bulk Operations
+        function bulkAcceptLeft() {
+            if (selectedObjects.size === 0) {
+                showNotification('No objects selected', 'warning');
+                return;
+            }
+
+            selectedObjects.forEach(obj => quickResolve(obj, 'left'));
+            clearSelection();
+            showNotification(`${selectedObjects.size} objects resolved with Left model`, 'success');
+        }
+
+        function bulkAcceptRight() {
+            if (selectedObjects.size === 0) {
+                showNotification('No objects selected', 'warning');
+                return;
+            }
+
+            selectedObjects.forEach(obj => quickResolve(obj, 'right'));
+            clearSelection();
+            showNotification(`${selectedObjects.size} objects resolved with Right model`, 'success');
+        }
+
+        function smartMerge() {
+            showNotification('Smart merge analyzing conflicts...', 'info');
+
+            setTimeout(() => {
+                // Simulate smart merge
+                conflicts.resolved += 3;
+                conflicts.pending = Math.max(0, conflicts.pending - 3);
+                updateProgress();
+                showNotification('Smart merge completed: 3 conflicts auto-resolved', 'success');
+            }, 1500);
+        }
+
+        function clearSelection() {
+            selectedObjects.clear();
+            document.querySelectorAll('.object-checkbox').forEach(cb => cb.checked = false);
+            updateBulkActions();
+        }
+
+        // Preset Management
+        function applyPreset(presetName) {
+            console.log(`Applying preset: ${presetName}`);
+            showNotification(`Applied preset: ${presetName}`, 'success');
+        }
+
+        function saveCurrentView() {
+            showNotification('Current view saved as custom preset', 'success');
+        }
+
+        // Auto-save Setup
+        function setupAutoSave() {
+            setInterval(() => {
+                // Auto-save progress
+                localStorage.setItem('compareProgress', JSON.stringify(conflicts));
+            }, 30000);
+        }
+
+        // Additional utility functions...
+        function selectAllLeft() { console.log('Select all left'); }
+        function selectAllRight() { console.log('Select all right'); }
+        function expandAllLeft() { console.log('Expand all left'); }
+        function expandAllRight() { console.log('Expand all right'); }
+        function togglePropertyPane() { console.log('Toggle property pane'); }
+        function detachPropertyPane() { console.log('Detach property pane'); }
+        function previewMerge() { console.log('Preview merge'); }
+        function toggleReportDrawer() { console.log('Toggle report drawer'); }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Enhanced Complete Compare initialized');
+        });
+    </script>
+</body>
+</html>

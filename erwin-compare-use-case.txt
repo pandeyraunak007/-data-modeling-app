@@ -1,0 +1,339 @@
+================================================================================
+ERWIN COMPLETE COMPARE - USE CASE DOCUMENTATION
+================================================================================
+
+TEST SCENARIO: Customer Database Model Evolution v1.2 → v1.3
+================================================================
+
+PURPOSE:
+This use case demonstrates a real-world database evolution scenario where a
+CustomerDB model has been enhanced from version 1.2 to 1.3 to support product
+catalog functionality. The Complete Compare tool will identify differences,
+conflicts, and new objects between the two model versions.
+
+BUSINESS CONTEXT:
+The development team is upgrading their e-commerce customer database to include
+product management capabilities. This involves adding new entities, modifying
+existing structures, and introducing new constraints and business rules.
+
+================================================================================
+MODEL COMPARISON OVERVIEW
+================================================================================
+
+Left Model:  CustomerDB_v1.2.erwin (Source/Legacy Model)
+Right Model: CustomerDB_v1.3.erwin (Target/Enhanced Model)
+
+SUMMARY STATISTICS:
+- Total Objects Compared: 76 objects across both models
+- Identical Objects: 18 (remain unchanged)
+- Modified Objects: 12 (structural differences)
+- Objects Only in v1.2: 8 (will be removed/deprecated)
+- Objects Only in v1.3: 18 (new functionality)
+- Total Conflicts Requiring Resolution: 38
+
+================================================================================
+DETAILED OBJECT-BY-OBJECT ANALYSIS
+================================================================================
+
+LOGICAL MODEL CHANGES:
+========================
+
+ENTITIES:
+---------
+✓ Customer (SAME)
+  - 4 attributes remain unchanged
+  - Primary entity, no modifications needed
+
+⚠ Order (DIFFERENT)
+  v1.2: 5 attributes (OrderID, CustomerID, OrderDate, Status, Total)
+  v1.3: 6 attributes (Added: ShippingAddress)
+  CONFLICT: New required field needs default value handling
+
+⚠ OrderItem (DIFFERENT)
+  v1.2: 4 attributes (OrderItemID, OrderID, Quantity, Price)
+  v1.3: 5 attributes (Added: ProductID foreign key)
+  CONFLICT: Structural change requires data migration strategy
+
+❌ TempOrder (REMOVED in v1.3)
+  - Temporary entity no longer needed
+  - DECISION: Keep or remove from final model?
+
+➕ Product (NEW in v1.3)
+  - 5 attributes (ProductID, Name, Category, Price, StockQuantity)
+  - Core new functionality for product catalog
+
+RELATIONSHIPS:
+--------------
+✓ Customer → Order (SAME)
+  - One-to-many relationship unchanged
+
+⚠ Order → OrderItem (DIFFERENT)
+  v1.2: Simple 1:M relationship
+  v1.3: Enhanced with cascade delete rules
+  CONFLICT: Referential integrity rules changed
+
+➕ Product → OrderItem (NEW in v1.3)
+  - New 1:M relationship linking products to order items
+  - Enables product catalog functionality
+
+DOMAINS:
+--------
+✓ ID_Type (SAME) - INT, used for all primary keys
+
+⚠ Money_Type (DIFFERENT)
+  v1.2: DECIMAL (generic precision)
+  v1.3: DECIMAL(12,2) (specific precision for financial data)
+  CONFLICT: Precision change may affect existing data
+
+➕ Price_Type (NEW in v1.3)
+  - DECIMAL(10,2) specifically for product pricing
+  - Separate from general Money_Type for business rules
+
+================================================================================
+
+PHYSICAL MODEL CHANGES:
+========================
+
+TABLES:
+-------
+✓ Customer (SAME) - 4 columns, structure unchanged
+
+⚠ Order (DIFFERENT)
+  v1.2: 5 columns
+  v1.3: 6 columns (added shipping_address VARCHAR(500))
+  IMPACT: Table structure change requires ALTER TABLE
+
+⚠ OrderItem (DIFFERENT)
+  v1.2: 4 columns
+  v1.3: 5 columns (added product_id INT with FK constraint)
+  IMPACT: Major structural change, data migration required
+
+❌ TempOrder (REMOVED)
+  - 3 columns, temporary table no longer needed
+  - DECISION: Drop table or preserve for historical data?
+
+➕ Product (NEW)
+  - 5 columns: product_id, name, category, price, stock_quantity
+  - New core table for product management
+
+VIEWS:
+------
+✓ CustomerOrders (SAME) - Joins customers with their orders
+
+⚠ OrderSummary (DIFFERENT)
+  v1.2: Basic order totals
+  v1.3: Enhanced with product details and inventory tracking
+  CONFLICT: View definition substantially changed
+
+➕ ProductCatalog (NEW) - Product browsing interface
+➕ ProductSummary (NEW) - Product analytics and reporting
+
+INDEXES:
+--------
+✓ IDX_Customer_LastName (SAME) - Customer lookup performance
+
+⚠ IDX_Order_Date (DIFFERENT)
+  v1.2: Single column index on order_date
+  v1.3: Composite index on (order_date, status) for better query performance
+  IMPACT: Index rebuild required
+
+➕ IDX_Product_Category (NEW) - Product browsing performance
+➕ IDX_OrderItem_Product (NEW) - Order-product relationship lookups
+
+KEYS & CONSTRAINTS:
+-------------------
+✓ PK_Customer (SAME) - Primary key unchanged
+
+⚠ FK_Order_Customer (DIFFERENT)
+  v1.2: Basic foreign key
+  v1.3: Added CASCADE DELETE option
+  IMPACT: Referential integrity behavior change
+
+❌ UK_Customer_Email (REMOVED)
+  - Unique constraint on email removed (business rule change)
+  - DECISION: Email uniqueness no longer required?
+
+➕ FK_OrderItem_Product (NEW) - Links order items to products
+➕ CHK_Product_Price (NEW) - Ensures product prices are positive
+➕ CHK_Product_Stock (NEW) - Ensures stock quantities are non-negative
+
+TRIGGERS:
+---------
+✓ TRG_Order_Audit (SAME) - Order audit logging unchanged
+
+⚠ TRG_Customer_Update (DIFFERENT)
+  v1.2: BEFORE UPDATE trigger
+  v1.3: AFTER UPDATE trigger with enhanced logging
+  CONFLICT: Trigger timing and logic changed
+
+➕ TRG_Product_Validation (NEW) - Product data validation on insert
+➕ TRG_Inventory_Update (NEW) - Automatic inventory management
+
+STORED PROCEDURES:
+------------------
+✓ SP_GetCustomerOrders (SAME) - 3 parameters, unchanged
+
+⚠ SP_ProcessOrder (DIFFERENT)
+  v1.2: 5 parameters (basic order processing)
+  v1.3: 6 parameters (added inventory validation)
+  CONFLICT: Procedure signature changed, requires update
+
+➕ SP_ManageInventory (NEW) - 4 parameters, product stock management
+➕ SP_GetProductCatalog (NEW) - Product browsing with filters
+
+USER-DEFINED TYPES:
+-------------------
+✓ Address_Type (SAME) - Composite type unchanged
+
+⚠ Money_Type (DIFFERENT)
+  v1.2: Basic numeric type
+  v1.3: Enhanced with validation methods and currency support
+  IMPACT: Type definition substantially enhanced
+
+➕ Product_Category_Type (NEW) - Enumeration for product categories
+➕ Order_Status_Type (NEW) - Enumeration for order statuses
+
+================================================================================
+
+DATABASE OBJECTS:
+==================
+
+SCHEMAS:
+--------
+✓ customer_schema (SAME) - Customer-related objects
+
+⚠ order_schema (DIFFERENT)
+  v1.2: Basic order objects
+  v1.3: Expanded to include order processing and fulfillment objects
+  IMPACT: Schema reorganization affects object placement
+
+➕ product_schema (NEW) - Product catalog and inventory management
+
+TABLESPACES:
+------------
+✓ DATA_TS (SAME) - Primary data storage
+✓ INDEX_TS (SAME) - Index storage
+
+➕ PRODUCT_TS (NEW) - Dedicated storage for product data and indexes
+
+================================================================================
+TESTING PROCEDURE
+================================================================================
+
+STEP 1: MODEL SELECTION
+-----------------------
+1. Open the Complete Compare wizard
+2. Verify Left Model shows "CustomerDB_v1.2.erwin"
+3. Verify Right Model shows "CustomerDB_v1.3.erwin"
+4. Proceed to compare options
+
+STEP 2: CONFIGURE COMPARISON
+----------------------------
+1. Select "Logical and Physical" comparison level
+2. Ensure all object types are selected for comparison:
+   ☑ Tables ☑ Views ☑ Indexes ☑ Keys and Constraints ☑ Relationships
+3. Enable advanced options:
+   ☑ Compare object names ☑ Compare data types ☑ Compare constraints
+4. Start the comparison process
+
+STEP 3: REVIEW RESULTS
+----------------------
+Expected Statistics:
+- Total Objects: 76
+- Identical: 18 (green background)
+- Different: 12 (yellow background with ⚠️ icon)
+- Missing in Right: 8 (red background with ❌ icon)
+- Missing in Left: 18 (blue background with ➕ icon)
+
+STEP 4: DETAILED OBJECT INSPECTION
+----------------------------------
+Test each object type by expanding tree groups:
+
+LOGICAL MODEL TESTING:
+- Expand "Entities" → Click "Order" → Verify shows 5 vs 6 attributes
+- Expand "Relationships" → Click "Order → OrderItem" → Verify cascade changes
+- Expand "Domains" → Click "Money_Type" → Verify precision differences
+
+PHYSICAL MODEL TESTING:
+- Expand "Tables" → Click "OrderItem" → Verify 4 vs 5 columns
+- Expand "Views" → Click "OrderSummary" → Verify definition changes
+- Expand "Indexes" → Click "IDX_Order_Date" → Verify single vs composite
+- Expand "Keys & Constraints" → Click "FK_Order_Customer" → Verify cascade options
+
+STEP 5: CONFLICT RESOLUTION
+---------------------------
+Test resolution actions for different conflict types:
+
+1. MODIFICATION CONFLICTS (Yellow ⚠️):
+   - Select "Order" table → Choose "Use Right" (accept v1.3 structure)
+   - Select "Money_Type" domain → Choose "Merge" (combine precision)
+
+2. MISSING OBJECTS (Red ❌):
+   - Select "TempOrder" → Choose "Remove" (deprecate temporary table)
+   - Select "UK_Customer_Email" → Choose "Keep" (preserve uniqueness)
+
+3. NEW OBJECTS (Blue ➕):
+   - Select "Product" table → Choose "Add" (include new functionality)
+   - Select "ProductCatalog" view → Choose "Add" (include new view)
+
+STEP 6: VALIDATION TESTING
+--------------------------
+1. Click "Auto Resolve" → Verify compatible objects are resolved automatically
+2. Navigate through wizard steps using step buttons
+3. Test object selection highlighting and detail panel updates
+4. Verify tree expansion/collapse functionality
+5. Test resolution action buttons and visual feedback
+
+================================================================================
+EXPECTED OUTCOMES
+================================================================================
+
+SUCCESSFUL TEST COMPLETION:
+- All 38 conflicts identified and categorized correctly
+- Object details panel shows specific differences for each object
+- Resolution actions are available and contextually appropriate
+- Tree structure accurately reflects Erwin meta-object hierarchy
+- Visual indicators (colors, icons) correctly represent object status
+
+BUSINESS VALUE DEMONSTRATION:
+- Database evolution path is clearly visible
+- Impact assessment is available for each change
+- Data migration requirements are identified
+- New functionality integration points are highlighted
+- Risk assessment for breaking changes is provided
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+COMMON TEST ISSUES:
+- If tree groups don't expand: Check JavaScript console for errors
+- If object counts don't match: Verify all object types are loaded
+- If resolution actions don't work: Ensure object selection is active
+- If visual updates don't occur: Check CSS class assignments
+
+VALIDATION POINTS:
+- Logical Model objects should total 26 in v1.3 vs 24 in v1.2
+- Physical Model objects should total 48 in v1.3 vs 42 in v1.2
+- Database Objects should total 10 in v1.3 vs 8 in v1.2
+- All status indicators should use consistent color coding
+
+================================================================================
+CONCLUSION
+================================================================================
+
+This use case demonstrates a comprehensive database evolution scenario that
+exercises all major Complete Compare functionality including:
+
+✓ Multi-level model comparison (Logical, Physical, Database Objects)
+✓ Complex conflict identification and categorization
+✓ Comprehensive meta-object support across all Erwin object types
+✓ Real-world business scenario with practical resolution decisions
+✓ Visual comparison interface with professional Erwin styling
+✓ Interactive resolution workflow with multiple action options
+
+The test scenario provides a realistic foundation for evaluating Complete
+Compare functionality and demonstrates the tool's capability to handle
+complex database evolution projects.
+
+================================================================================

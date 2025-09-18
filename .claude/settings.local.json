@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(start modeler.html)"
+      "Bash(start modeler.html)",
+      "Bash(start complete-compare.html)",
+      "Bash(git restore:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "WebFetch(domain:hackolade.com)",
+      "Bash(start complete-compare-enhanced.html)",
+      "Bash(start simple-compare.html)",
+      "Bash(del simple-compare.html)",
+      "WebSearch",
+      "WebFetch(domain:s3.amazonaws.com)",
+      "WebFetch(domain:ssbitutorials.wordpress.com)",
+      "Bash(start erwin-compare.html)",
+      "Bash(start \"C:\\Users\\pande\\OneDrive\\Documents\\Raunak\\forGit\\data-modeling-app\\modeler_compare.html\")",
+      "Bash(start \"C:\\Users\\pande\\OneDrive\\Documents\\Raunak\\forGit\\data-modeling-app\\modeler_compare_clean.html\")"
     ],
     "deny": [],
     "ask": []

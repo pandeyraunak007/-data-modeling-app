@@ -1,0 +1,2570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Compare - Erwin Cloud DM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        /* Erwin-style UI Design */
+        .erwin-window {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .erwin-toolbar {
+            background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+            border-bottom: 1px solid #d1d5db;
+            height: 40px;
+        }
+
+        .erwin-panel {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+        }
+
+        .erwin-button {
+            background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+            border: 1px solid #adb5bd;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #495057;
+            transition: all 0.2s;
+        }
+
+        .erwin-button:hover {
+            background: linear-gradient(to bottom, #e9ecef, #dee2e6);
+            border-color: #6c757d;
+        }
+
+        .erwin-button.primary {
+            background: linear-gradient(to bottom, #0d6efd, #0b5ed7);
+            border-color: #0a58ca;
+            color: white;
+        }
+
+        .erwin-button.primary:hover {
+            background: linear-gradient(to bottom, #0b5ed7, #0a58ca);
+        }
+
+        /* Enhanced Model Tree Styling */
+        .model-tree {
+            font-size: 12px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .tree-group {
+            margin-bottom: 8px;
+        }
+
+        .tree-group-header {
+            padding: 4px 8px;
+            background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+            border: 1px solid #d1d5db;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tree-group-header:hover {
+            background: linear-gradient(to bottom, #e9ecef, #dee2e6);
+        }
+
+        .tree-group-content {
+            margin-left: 12px;
+            border-left: 1px dotted #d1d5db;
+            padding-left: 8px;
+            margin-top: 2px;
+        }
+
+        .tree-group-content.collapsed {
+            display: none;
+        }
+
+        .tree-node {
+            padding: 2px 4px;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tree-node:hover {
+            background: #e3f2fd;
+        }
+
+        .tree-node.selected {
+            background: #1976d2;
+            color: white;
+        }
+
+        .tree-node-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .tree-icon {
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+            margin-right: 6px;
+            vertical-align: middle;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .expand-icon {
+            font-size: 10px;
+            color: #6c757d;
+            margin-right: 4px;
+            transition: transform 0.2s;
+        }
+
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+
+        .object-count {
+            font-size: 10px;
+            color: #6c757d;
+            background: #f8f9fa;
+            padding: 1px 4px;
+            border-radius: 2px;
+            margin-left: 4px;
+        }
+
+        .object-info {
+            font-size: 10px;
+            color: #6c757d;
+            margin-left: auto;
+            margin-right: 8px;
+        }
+
+        /* Erwin Object Status Colors */
+        .status-same { background-color: #e8f5e8; border-left: 3px solid #4caf50; }
+        .status-different { background-color: #fff3cd; border-left: 3px solid #ffc107; }
+        .status-missing-left { background-color: #f8d7da; border-left: 3px solid #dc3545; }
+        .status-missing-right { background-color: #d1ecf1; border-left: 3px solid #17a2b8; }
+
+        /* Comparison Result Grid */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 1px;
+            background: #d1d5db;
+            border: 1px solid #d1d5db;
+        }
+
+        .comparison-column {
+            background: white;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+
+        .comparison-header {
+            background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+            border-bottom: 1px solid #d1d5db;
+            padding: 8px 12px;
+            font-weight: 600;
+            font-size: 12px;
+            color: #495057;
+        }
+
+        /* Resolution Actions */
+        .resolution-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            margin-left: auto;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .tree-node:hover .resolution-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            padding: 1px 6px;
+            font-size: 10px;
+            border-radius: 2px;
+            border: 1px solid;
+            cursor: pointer;
+        }
+
+        .action-use-left {
+            background: #e3f2fd;
+            border-color: #1976d2;
+            color: #1976d2;
+        }
+
+        .action-use-right {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            color: #4caf50;
+        }
+
+        .action-merge {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        /* Progress and Statistics */
+        .compare-stats {
+            background: #f8f9fa;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 12px 0;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+            font-size: 12px;
+        }
+
+        /* Wizard Steps */
+        .wizard-steps {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #d1d5db;
+            padding: 0;
+        }
+
+        .wizard-step {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            border-right: 1px solid #d1d5db;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .wizard-step:last-child {
+            border-right: none;
+        }
+
+        .wizard-step.active {
+            background: #1976d2;
+            color: white;
+        }
+
+        .wizard-step.completed {
+            background: #4caf50;
+            color: white;
+        }
+
+        .wizard-step:hover:not(.active) {
+            background: #e9ecef;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Complete Compare Wizard -->
+    <div class="container mx-auto p-6">
+
+        <!-- Main Wizard Window -->
+        <div class="erwin-window bg-white">
+
+            <!-- Window Title Bar -->
+            <div class="erwin-toolbar flex items-center justify-between px-4">
+                <div class="flex items-center">
+                    <span class="material-symbols-outlined text-blue-600 mr-2">compare_arrows</span>
+                    <span class="font-semibold text-sm">Complete Compare - Erwin Cloud DM</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button class="text-gray-500 hover:text-gray-700">
+                        <span class="material-symbols-outlined">help</span>
+                    </button>
+                    <button class="text-gray-500 hover:text-gray-700" onclick="closeWizard()">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Wizard Steps -->
+            <div class="wizard-steps">
+                <div class="wizard-step completed" onclick="goToStep(1)">
+                    <div>1. Select Models</div>
+                </div>
+                <div class="wizard-step active" onclick="goToStep(2)">
+                    <div>2. Compare Options</div>
+                </div>
+                <div class="wizard-step" onclick="goToStep(3)">
+                    <div>3. Compare Results</div>
+                </div>
+                <div class="wizard-step" onclick="goToStep(4)">
+                    <div>4. Resolve Differences</div>
+                </div>
+                <div class="wizard-step" onclick="goToStep(5)">
+                    <div>5. Generate Scripts</div>
+                </div>
+            </div>
+
+            <!-- Step 1: Model Selection (Hidden after completion) -->
+            <div id="step1" class="p-6" style="display: none;">
+                <h3 class="text-lg font-semibold mb-4">Select Models to Compare</h3>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <!-- Left Model -->
+                    <div class="erwin-panel p-4">
+                        <h4 class="font-semibold mb-3 text-blue-700">Left Model (Source)</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Model Source:</label>
+                                <select class="w-full p-2 border border-gray-300 rounded text-sm">
+                                    <option selected>Currently Open Model</option>
+                                    <option>Load from File...</option>
+                                    <option>Load from Mart...</option>
+                                    <option>Connect to Database...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Selected Model:</label>
+                                <div class="bg-gray-50 p-2 border rounded text-sm">
+                                    CustomerDB_v1.2.erwin
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="leftReadonly" class="mr-2">
+                                <label for="leftReadonly" class="text-sm">Set selected model as read-only</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Model -->
+                    <div class="erwin-panel p-4">
+                        <h4 class="font-semibold mb-3 text-green-700">Right Model (Target)</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Model Source:</label>
+                                <select class="w-full p-2 border border-gray-300 rounded text-sm">
+                                    <option>Currently Open Model</option>
+                                    <option selected>Load from File...</option>
+                                    <option>Load from Mart...</option>
+                                    <option>Connect to Database...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Selected Model:</label>
+                                <div class="bg-gray-50 p-2 border rounded text-sm">
+                                    CustomerDB_v1.3.erwin
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="rightReadonly" class="mr-2">
+                                <label for="rightReadonly" class="text-sm">Set selected model as read-only</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Compare Options -->
+            <div id="step2" class="p-6">
+                <h3 class="text-lg font-semibold mb-4">Configure Compare Options</h3>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <!-- Compare Level -->
+                    <div class="erwin-panel p-4">
+                        <h4 class="font-semibold mb-3">Compare Level</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="compareLevel" value="logical" checked class="mr-2">
+                                <span class="text-sm">Logical Model Only</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="compareLevel" value="physical" class="mr-2">
+                                <span class="text-sm">Physical Model Only</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="compareLevel" value="both" class="mr-2">
+                                <span class="text-sm">Logical and Physical</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Object Types -->
+                    <div class="erwin-panel p-4">
+                        <h4 class="font-semibold mb-3">Object Types to Compare</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="text-sm">Tables</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="text-sm">Views</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="text-sm">Indexes</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="text-sm">Keys and Constraints</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="text-sm">Relationships</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">Stored Procedures</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Options -->
+                <div class="erwin-panel p-4 mt-4">
+                    <h4 class="font-semibold mb-3">Advanced Options</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="text-sm">Compare object names</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="text-sm">Compare data types</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="text-sm">Compare constraints</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">Compare comments</span>
+                            </label>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">Case sensitive comparison</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="text-sm">Compare column order</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="text-sm">Include orphaned objects</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">Generate comparison report</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-between mt-6">
+                    <button class="erwin-button px-4 py-2" onclick="goToStep(1)">
+                        ← Previous
+                    </button>
+                    <button class="erwin-button primary px-6 py-2" onclick="startComparison()">
+                        Start Compare
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Compare Results -->
+            <div id="step3" class="p-6" style="display: none;">
+                <h3 class="text-lg font-semibold mb-4">Compare Results</h3>
+
+                <!-- Statistics Summary -->
+                <div class="compare-stats">
+                    <h4 class="font-semibold mb-2">Comparison Summary</h4>
+                    <div class="grid grid-cols-4 gap-4">
+                        <div class="stat-item">
+                            <span>Total Objects:</span>
+                            <span class="font-semibold">24</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Identical:</span>
+                            <span class="font-semibold text-green-600">8</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Different:</span>
+                            <span class="font-semibold text-yellow-600">6</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Missing:</span>
+                            <span class="font-semibold text-red-600">10</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparison Grid -->
+                <div class="comparison-grid">
+                    <!-- Left Model Column -->
+                    <div class="comparison-column">
+                        <div class="comparison-header">
+                            Left Model (CustomerDB_v1.2)
+                        </div>
+                        <div class="model-tree p-2">
+                            <!-- Logical Model Objects -->
+                            <div class="tree-group">
+                                <div class="tree-group-header" onclick="toggleGroup('leftLogical')">
+                                    <div class="flex items-center">
+                                        <span class="expand-icon">▶</span>
+                                        <span class="tree-icon">🧠</span>
+                                        <span>Logical Model</span>
+                                        <span class="object-count">24</span>
+                                    </div>
+                                </div>
+                                <div id="leftLogical" class="tree-group-content">
+                                    <!-- Entities -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('leftEntities')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">📋</span>
+                                                <span>Entities</span>
+                                                <span class="object-count">5</span>
+                                            </div>
+                                        </div>
+                                        <div id="leftEntities" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('Customer', 'entity')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">📄</span>
+                                                    <span>Customer</span>
+                                                    <span class="object-info">4 attrs</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('Order', 'entity')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>Order</span>
+                                                    <span class="object-info">5 attrs</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Use Left</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('OrderItem', 'entity')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>OrderItem</span>
+                                                    <span class="object-info">4 attrs</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Use Left</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-right" onclick="selectObject('TempOrder', 'entity')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">❌</span>
+                                                    <span>TempOrder</span>
+                                                    <span class="object-info">3 attrs</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Keep</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Relationships -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('leftRelationships')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">🔗</span>
+                                                <span>Relationships</span>
+                                                <span class="object-count">4</span>
+                                            </div>
+                                        </div>
+                                        <div id="leftRelationships" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('Customer_Order', 'relationship')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">🔄</span>
+                                                    <span>Customer → Order</span>
+                                                    <span class="object-info">1:M</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('Order_OrderItem', 'relationship')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>Order → OrderItem</span>
+                                                    <span class="object-info">1:M</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Use Left</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Domains -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('leftDomains')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">🎯</span>
+                                                <span>Domains</span>
+                                                <span class="object-count">8</span>
+                                            </div>
+                                        </div>
+                                        <div id="leftDomains" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('ID_Type', 'domain')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">🏷️</span>
+                                                    <span>ID_Type</span>
+                                                    <span class="object-info">INT</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('Money_Type', 'domain')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>Money_Type</span>
+                                                    <span class="object-info">DECIMAL</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Use Left</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Physical Model Objects -->
+                            <div class="tree-group">
+                                <div class="tree-group-header" onclick="toggleGroup('leftPhysical')">
+                                    <div class="flex items-center">
+                                        <span class="expand-icon expanded">▶</span>
+                                        <span class="tree-icon">🏗️</span>
+                                        <span>Physical Model</span>
+                                        <span class="object-count">42</span>
+                                    </div>
+                                </div>
+                                <div id="leftPhysical" class="tree-group-content">
+                                    <!-- Tables -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('leftTables')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon expanded">▶</span>
+                                                <span class="tree-icon">📊</span>
+                                                <span>Tables</span>
+                                                <span class="object-count">5</span>
+                                            </div>
+                                        </div>
+                                        <div id="leftTables" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('Customer', 'table')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">🗂️</span>
+                                                    <span>Customer</span>
+                                                    <span class="object-info">4 cols</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('Order', 'table')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>Order</span>
+                                                    <span class="object-info">5 cols</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Use Left</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('OrderItem', 'table')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>OrderItem</span>
+                                                    <span class="object-info">4 cols</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Use Left</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-right" onclick="selectObject('TempOrder', 'table')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">❌</span>
+                                                    <span>TempOrder</span>
+                                                    <span class="object-info">3 cols</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Keep</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Views -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('leftViews')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">👁️</span>
+                                                <span>Views</span>
+                                                <span class="object-count">3</span>
+                                            </div>
+                                        </div>
+                                        <div id="leftViews" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('CustomerOrders', 'view')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">👀</span>
+                                                    <span>CustomerOrders</span>
+                                                    <span class="object-info">View</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('OrderSummary', 'view')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>OrderSummary</span>
+                                                    <span class="object-info">View</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Use Left</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Indexes -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('leftIndexes')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">⚡</span>
+                                                <span>Indexes</span>
+                                                <span class="object-count">8</span>
+                                            </div>
+                                        </div>
+                                        <div id="leftIndexes" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('IDX_Customer_LastName', 'index')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">📍</span>
+                                                    <span>IDX_Customer_LastName</span>
+                                                    <span class="object-info">Non-Unique</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('IDX_Order_Date', 'index')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>IDX_Order_Date</span>
+                                                    <span class="object-info">Non-Unique</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Use Left</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Keys & Constraints -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('leftKeys')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">🔑</span>
+                                                <span>Keys & Constraints</span>
+                                                <span class="object-count">12</span>
+                                            </div>
+                                        </div>
+                                        <div id="leftKeys" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('PK_Customer', 'key')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">🔐</span>
+                                                    <span>PK_Customer</span>
+                                                    <span class="object-info">Primary</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('FK_Order_Customer', 'key')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>FK_Order_Customer</span>
+                                                    <span class="object-info">Foreign</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Use Left</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-right" onclick="selectObject('UK_Customer_Email', 'key')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">❌</span>
+                                                    <span>UK_Customer_Email</span>
+                                                    <span class="object-info">Unique</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Keep</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Triggers -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('leftTriggers')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">⚡</span>
+                                                <span>Triggers</span>
+                                                <span class="object-count">3</span>
+                                            </div>
+                                        </div>
+                                        <div id="leftTriggers" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('TRG_Order_Audit', 'trigger')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">🎯</span>
+                                                    <span>TRG_Order_Audit</span>
+                                                    <span class="object-info">After Insert</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('TRG_Customer_Update', 'trigger')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>TRG_Customer_Update</span>
+                                                    <span class="object-info">Before Update</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Use Left</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stored Procedures -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('leftProcedures')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">⚙️</span>
+                                                <span>Stored Procedures</span>
+                                                <span class="object-count">5</span>
+                                            </div>
+                                        </div>
+                                        <div id="leftProcedures" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('SP_GetCustomerOrders', 'procedure')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">🔧</span>
+                                                    <span>SP_GetCustomerOrders</span>
+                                                    <span class="object-info">3 params</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('SP_ProcessOrder', 'procedure')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>SP_ProcessOrder</span>
+                                                    <span class="object-info">5 params</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Use Left</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- User-Defined Types -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('leftUDTs')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">🏷️</span>
+                                                <span>User-Defined Types</span>
+                                                <span class="object-count">4</span>
+                                            </div>
+                                        </div>
+                                        <div id="leftUDTs" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('Address_Type', 'udt')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">📝</span>
+                                                    <span>Address_Type</span>
+                                                    <span class="object-info">Composite</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('Money_Type', 'udt')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>Money_Type</span>
+                                                    <span class="object-info">Numeric</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Use Left</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Database Objects -->
+                            <div class="tree-group">
+                                <div class="tree-group-header" onclick="toggleGroup('leftDatabase')">
+                                    <div class="flex items-center">
+                                        <span class="expand-icon">▶</span>
+                                        <span class="tree-icon">🗄️</span>
+                                        <span>Database Objects</span>
+                                        <span class="object-count">8</span>
+                                    </div>
+                                </div>
+                                <div id="leftDatabase" class="tree-group-content">
+                                    <!-- Schemas -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('leftSchemas')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">📂</span>
+                                                <span>Schemas</span>
+                                                <span class="object-count">2</span>
+                                            </div>
+                                        </div>
+                                        <div id="leftSchemas" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('customer_schema', 'schema')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">📁</span>
+                                                    <span>customer_schema</span>
+                                                    <span class="object-info">Schema</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('order_schema', 'schema')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>order_schema</span>
+                                                    <span class="object-info">Schema</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-left">Use Left</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tablespaces -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('leftTablespaces')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">💾</span>
+                                                <span>Tablespaces</span>
+                                                <span class="object-count">3</span>
+                                            </div>
+                                        </div>
+                                        <div id="leftTablespaces" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('DATA_TS', 'tablespace')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">💿</span>
+                                                    <span>DATA_TS</span>
+                                                    <span class="object-info">Data</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-same" onclick="selectObject('INDEX_TS', 'tablespace')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">💿</span>
+                                                    <span>INDEX_TS</span>
+                                                    <span class="object-info">Index</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Differences Column -->
+                    <div class="comparison-column">
+                        <div class="comparison-header">
+                            Object Details & Resolution
+                        </div>
+                        <div id="objectDetails" class="p-4 text-center text-gray-500">
+                            <span class="material-symbols-outlined text-4xl mb-2 block">info</span>
+                            <p>Select an object to view differences and resolution options</p>
+                        </div>
+                    </div>
+
+                    <!-- Right Model Column -->
+                    <div class="comparison-column">
+                        <div class="comparison-header">
+                            Right Model (CustomerDB_v1.3)
+                        </div>
+                        <div class="model-tree p-2">
+                            <!-- Logical Model Objects -->
+                            <div class="tree-group">
+                                <div class="tree-group-header" onclick="toggleGroup('rightLogical')">
+                                    <div class="flex items-center">
+                                        <span class="expand-icon">▶</span>
+                                        <span class="tree-icon">🧠</span>
+                                        <span>Logical Model</span>
+                                        <span class="object-count">26</span>
+                                    </div>
+                                </div>
+                                <div id="rightLogical" class="tree-group-content">
+                                    <!-- Entities -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('rightEntities')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">📋</span>
+                                                <span>Entities</span>
+                                                <span class="object-count">5</span>
+                                            </div>
+                                        </div>
+                                        <div id="rightEntities" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('Customer', 'entity')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">📄</span>
+                                                    <span>Customer</span>
+                                                    <span class="object-info">4 attrs</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('Order', 'entity')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>Order</span>
+                                                    <span class="object-info">6 attrs</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Use Right</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('OrderItem', 'entity')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>OrderItem</span>
+                                                    <span class="object-info">5 attrs</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Use Right</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-left" onclick="selectObject('Product', 'entity')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">➕</span>
+                                                    <span>Product</span>
+                                                    <span class="object-info">5 attrs</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Add</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Relationships -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('rightRelationships')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">🔗</span>
+                                                <span>Relationships</span>
+                                                <span class="object-count">5</span>
+                                            </div>
+                                        </div>
+                                        <div id="rightRelationships" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('Customer_Order', 'relationship')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">🔄</span>
+                                                    <span>Customer → Order</span>
+                                                    <span class="object-info">1:M</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('Order_OrderItem', 'relationship')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>Order → OrderItem</span>
+                                                    <span class="object-info">1:M</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Use Right</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-left" onclick="selectObject('Product_OrderItem', 'relationship')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">➕</span>
+                                                    <span>Product → OrderItem</span>
+                                                    <span class="object-info">1:M</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Add</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Domains -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('rightDomains')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">🎯</span>
+                                                <span>Domains</span>
+                                                <span class="object-count">9</span>
+                                            </div>
+                                        </div>
+                                        <div id="rightDomains" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('ID_Type', 'domain')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">🏷️</span>
+                                                    <span>ID_Type</span>
+                                                    <span class="object-info">INT</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('Money_Type', 'domain')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>Money_Type</span>
+                                                    <span class="object-info">DECIMAL(12,2)</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Use Right</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-left" onclick="selectObject('Price_Type', 'domain')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">➕</span>
+                                                    <span>Price_Type</span>
+                                                    <span class="object-info">DECIMAL(10,2)</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Add</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Physical Model Objects -->
+                            <div class="tree-group">
+                                <div class="tree-group-header" onclick="toggleGroup('rightPhysical')">
+                                    <div class="flex items-center">
+                                        <span class="expand-icon expanded">▶</span>
+                                        <span class="tree-icon">🏗️</span>
+                                        <span>Physical Model</span>
+                                        <span class="object-count">48</span>
+                                    </div>
+                                </div>
+                                <div id="rightPhysical" class="tree-group-content">
+                                    <!-- Tables -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('rightTables')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon expanded">▶</span>
+                                                <span class="tree-icon">📊</span>
+                                                <span>Tables</span>
+                                                <span class="object-count">5</span>
+                                            </div>
+                                        </div>
+                                        <div id="rightTables" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('Customer', 'table')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">🗂️</span>
+                                                    <span>Customer</span>
+                                                    <span class="object-info">4 cols</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('Order', 'table')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>Order</span>
+                                                    <span class="object-info">6 cols</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Use Right</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('OrderItem', 'table')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>OrderItem</span>
+                                                    <span class="object-info">5 cols</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Use Right</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-left" onclick="selectObject('Product', 'table')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">➕</span>
+                                                    <span>Product</span>
+                                                    <span class="object-info">5 cols</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Add</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Views -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('rightViews')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">👁️</span>
+                                                <span>Views</span>
+                                                <span class="object-count">4</span>
+                                            </div>
+                                        </div>
+                                        <div id="rightViews" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('CustomerOrders', 'view')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">👀</span>
+                                                    <span>CustomerOrders</span>
+                                                    <span class="object-info">View</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('OrderSummary', 'view')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>OrderSummary</span>
+                                                    <span class="object-info">View</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Use Right</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-left" onclick="selectObject('ProductCatalog', 'view')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">➕</span>
+                                                    <span>ProductCatalog</span>
+                                                    <span class="object-info">View</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Add</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-left" onclick="selectObject('ProductSummary', 'view')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">➕</span>
+                                                    <span>ProductSummary</span>
+                                                    <span class="object-info">View</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Add</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Indexes -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('rightIndexes')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">⚡</span>
+                                                <span>Indexes</span>
+                                                <span class="object-count">10</span>
+                                            </div>
+                                        </div>
+                                        <div id="rightIndexes" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('IDX_Customer_LastName', 'index')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">📍</span>
+                                                    <span>IDX_Customer_LastName</span>
+                                                    <span class="object-info">Non-Unique</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('IDX_Order_Date', 'index')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>IDX_Order_Date</span>
+                                                    <span class="object-info">Composite</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Use Right</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-left" onclick="selectObject('IDX_Product_Category', 'index')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">➕</span>
+                                                    <span>IDX_Product_Category</span>
+                                                    <span class="object-info">Non-Unique</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Add</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Keys & Constraints -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('rightKeys')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">🔑</span>
+                                                <span>Keys & Constraints</span>
+                                                <span class="object-count">14</span>
+                                            </div>
+                                        </div>
+                                        <div id="rightKeys" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('PK_Customer', 'key')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">🔐</span>
+                                                    <span>PK_Customer</span>
+                                                    <span class="object-info">Primary</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('FK_Order_Customer', 'key')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>FK_Order_Customer</span>
+                                                    <span class="object-info">Foreign</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Use Right</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-left" onclick="selectObject('FK_OrderItem_Product', 'key')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">➕</span>
+                                                    <span>FK_OrderItem_Product</span>
+                                                    <span class="object-info">Foreign</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Add</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Triggers -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('rightTriggers')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">⚡</span>
+                                                <span>Triggers</span>
+                                                <span class="object-count">4</span>
+                                            </div>
+                                        </div>
+                                        <div id="rightTriggers" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('TRG_Order_Audit', 'trigger')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">🎯</span>
+                                                    <span>TRG_Order_Audit</span>
+                                                    <span class="object-info">After Insert</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('TRG_Customer_Update', 'trigger')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>TRG_Customer_Update</span>
+                                                    <span class="object-info">After Update</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Use Right</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-left" onclick="selectObject('TRG_Product_Validation', 'trigger')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">➕</span>
+                                                    <span>TRG_Product_Validation</span>
+                                                    <span class="object-info">Before Insert</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Add</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stored Procedures -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('rightProcedures')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">⚙️</span>
+                                                <span>Stored Procedures</span>
+                                                <span class="object-count">7</span>
+                                            </div>
+                                        </div>
+                                        <div id="rightProcedures" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('SP_GetCustomerOrders', 'procedure')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">🔧</span>
+                                                    <span>SP_GetCustomerOrders</span>
+                                                    <span class="object-info">3 params</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('SP_ProcessOrder', 'procedure')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>SP_ProcessOrder</span>
+                                                    <span class="object-info">6 params</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Use Right</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-left" onclick="selectObject('SP_ManageInventory', 'procedure')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">➕</span>
+                                                    <span>SP_ManageInventory</span>
+                                                    <span class="object-info">4 params</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Add</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- User-Defined Types -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('rightUDTs')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">🏷️</span>
+                                                <span>User-Defined Types</span>
+                                                <span class="object-count">5</span>
+                                            </div>
+                                        </div>
+                                        <div id="rightUDTs" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('Address_Type', 'udt')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">📝</span>
+                                                    <span>Address_Type</span>
+                                                    <span class="object-info">Composite</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('Money_Type', 'udt')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>Money_Type</span>
+                                                    <span class="object-info">Enhanced</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Use Right</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-left" onclick="selectObject('Product_Category_Type', 'udt')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">➕</span>
+                                                    <span>Product_Category_Type</span>
+                                                    <span class="object-info">Enum</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Add</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Database Objects -->
+                            <div class="tree-group">
+                                <div class="tree-group-header" onclick="toggleGroup('rightDatabase')">
+                                    <div class="flex items-center">
+                                        <span class="expand-icon">▶</span>
+                                        <span class="tree-icon">🗄️</span>
+                                        <span>Database Objects</span>
+                                        <span class="object-count">10</span>
+                                    </div>
+                                </div>
+                                <div id="rightDatabase" class="tree-group-content">
+                                    <!-- Schemas -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('rightSchemas')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">📂</span>
+                                                <span>Schemas</span>
+                                                <span class="object-count">3</span>
+                                            </div>
+                                        </div>
+                                        <div id="rightSchemas" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('customer_schema', 'schema')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">📁</span>
+                                                    <span>customer_schema</span>
+                                                    <span class="object-info">Schema</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-different" onclick="selectObject('order_schema', 'schema')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">⚠️</span>
+                                                    <span>order_schema</span>
+                                                    <span class="object-info">Schema</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Use Right</span>
+                                                    <span class="action-btn action-merge">Merge</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-left" onclick="selectObject('product_schema', 'schema')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">➕</span>
+                                                    <span>product_schema</span>
+                                                    <span class="object-info">Schema</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Add</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tablespaces -->
+                                    <div class="tree-group">
+                                        <div class="tree-group-header" onclick="toggleGroup('rightTablespaces')">
+                                            <div class="flex items-center">
+                                                <span class="expand-icon">▶</span>
+                                                <span class="tree-icon">💾</span>
+                                                <span>Tablespaces</span>
+                                                <span class="object-count">4</span>
+                                            </div>
+                                        </div>
+                                        <div id="rightTablespaces" class="tree-group-content">
+                                            <div class="tree-node status-same" onclick="selectObject('DATA_TS', 'tablespace')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">💿</span>
+                                                    <span>DATA_TS</span>
+                                                    <span class="object-info">Data</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-same" onclick="selectObject('INDEX_TS', 'tablespace')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">💿</span>
+                                                    <span>INDEX_TS</span>
+                                                    <span class="object-info">Index</span>
+                                                </div>
+                                            </div>
+                                            <div class="tree-node status-missing-left" onclick="selectObject('PRODUCT_TS', 'tablespace')">
+                                                <div class="tree-node-content">
+                                                    <span class="tree-icon">➕</span>
+                                                    <span>PRODUCT_TS</span>
+                                                    <span class="object-info">Data</span>
+                                                </div>
+                                                <div class="resolution-actions">
+                                                    <span class="action-btn action-use-right">Add</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between mt-6">
+                    <button class="erwin-button px-4 py-2" onclick="goToStep(2)">
+                        ← Previous
+                    </button>
+                    <div class="space-x-2">
+                        <button class="erwin-button px-4 py-2" onclick="autoResolve()">
+                            Auto Resolve
+                        </button>
+                        <button class="erwin-button primary px-4 py-2" onclick="goToStep(4)">
+                            Resolve Differences →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Resolve Differences -->
+            <div id="step4" class="p-6" style="display: none;">
+                <h3 class="text-lg font-semibold mb-4">Resolve Differences</h3>
+
+                <!-- Resolution Summary -->
+                <div class="compare-stats mb-4">
+                    <h4 class="font-semibold mb-2">Resolution Progress</h4>
+                    <div class="grid grid-cols-4 gap-4">
+                        <div class="stat-item">
+                            <span>Total Conflicts:</span>
+                            <span class="font-semibold">16</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Resolved:</span>
+                            <span class="font-semibold text-green-600">8</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Pending:</span>
+                            <span class="font-semibold text-orange-600">8</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Progress:</span>
+                            <span class="font-semibold">50%</span>
+                        </div>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                        <div class="bg-green-600 h-2 rounded-full" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <!-- Resolution Strategy Options -->
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="erwin-panel p-4">
+                        <h4 class="font-semibold mb-3 text-blue-700">Quick Resolution</h4>
+                        <div class="space-y-2">
+                            <button class="w-full erwin-button px-3 py-2" onclick="autoResolveStrategy('prefer-left')">
+                                Prefer Left Model
+                            </button>
+                            <button class="w-full erwin-button px-3 py-2" onclick="autoResolveStrategy('prefer-right')">
+                                Prefer Right Model
+                            </button>
+                            <button class="w-full erwin-button px-3 py-2" onclick="autoResolveStrategy('merge-compatible')">
+                                Auto-Merge Compatible
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="erwin-panel p-4">
+                        <h4 class="font-semibold mb-3 text-green-700">Resolution Rules</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                Preserve existing data integrity
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                Maintain referential consistency
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" class="mr-2">
+                                Allow data type conversions
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                Generate migration warnings
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="erwin-panel p-4">
+                        <h4 class="font-semibold mb-3 text-purple-700">Export Options</h4>
+                        <div class="space-y-2">
+                            <button class="w-full erwin-button px-3 py-2" onclick="exportResolutions('xml')">
+                                Export as XML
+                            </button>
+                            <button class="w-full erwin-button px-3 py-2" onclick="exportResolutions('json')">
+                                Export as JSON
+                            </button>
+                            <button class="w-full erwin-button px-3 py-2" onclick="saveResolutionProfile()">
+                                Save Profile
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Conflict Resolution List -->
+                <div class="erwin-panel">
+                    <div class="comparison-header">
+                        Detailed Conflict Resolution
+                    </div>
+                    <div class="p-4">
+                        <div class="space-y-3">
+                            <!-- High Priority Conflicts -->
+                            <div class="border border-red-200 rounded-lg p-3 bg-red-50">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h5 class="font-semibold text-red-800">🔴 High Priority Conflicts (4)</h5>
+                                    <button class="text-sm text-red-600 hover:underline" onclick="expandConflictGroup('high')">
+                                        Expand All
+                                    </button>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="conflict-item bg-white border rounded p-3">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <div class="font-medium">Table: OrderItem</div>
+                                                <div class="text-sm text-gray-600">Structural change: Added ProductID column with FK constraint</div>
+                                                <div class="text-xs text-red-600 mt-1">⚠️ Requires data migration strategy</div>
+                                            </div>
+                                            <div class="flex space-x-2 ml-4">
+                                                <select class="text-sm border rounded px-2 py-1" onchange="resolveConflict('OrderItem', this.value)">
+                                                    <option value="">Select Action</option>
+                                                    <option value="use-left">Use Left (Drop FK)</option>
+                                                    <option value="use-right">Use Right (Add FK)</option>
+                                                    <option value="custom">Custom Migration</option>
+                                                </select>
+                                                <button class="erwin-button px-2 py-1 text-xs" onclick="showConflictDetails('OrderItem')">
+                                                    Details
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="conflict-item bg-white border rounded p-3">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <div class="font-medium">Constraint: UK_Customer_Email</div>
+                                                <div class="text-sm text-gray-600">Unique constraint removed in right model</div>
+                                                <div class="text-xs text-red-600 mt-1">⚠️ Business rule change affects data validation</div>
+                                            </div>
+                                            <div class="flex space-x-2 ml-4">
+                                                <select class="text-sm border rounded px-2 py-1" onchange="resolveConflict('UK_Customer_Email', this.value)">
+                                                    <option value="">Select Action</option>
+                                                    <option value="keep">Keep Constraint</option>
+                                                    <option value="remove">Remove Constraint</option>
+                                                    <option value="conditional">Conditional Check</option>
+                                                </select>
+                                                <button class="erwin-button px-2 py-1 text-xs" onclick="showConflictDetails('UK_Customer_Email')">
+                                                    Details
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="conflict-item bg-white border rounded p-3">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <div class="font-medium">Trigger: TRG_Customer_Update</div>
+                                                <div class="text-sm text-gray-600">Timing changed from BEFORE to AFTER UPDATE</div>
+                                                <div class="text-xs text-red-600 mt-1">⚠️ Logic change may affect application behavior</div>
+                                            </div>
+                                            <div class="flex space-x-2 ml-4">
+                                                <select class="text-sm border rounded px-2 py-1" onchange="resolveConflict('TRG_Customer_Update', this.value)">
+                                                    <option value="">Select Action</option>
+                                                    <option value="before">Keep BEFORE</option>
+                                                    <option value="after">Use AFTER</option>
+                                                    <option value="both">Create Both</option>
+                                                </select>
+                                                <button class="erwin-button px-2 py-1 text-xs" onclick="showConflictDetails('TRG_Customer_Update')">
+                                                    Details
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="conflict-item bg-white border rounded p-3">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <div class="font-medium">Procedure: SP_ProcessOrder</div>
+                                                <div class="text-sm text-gray-600">Parameter signature changed (5 → 6 parameters)</div>
+                                                <div class="text-xs text-red-600 mt-1">⚠️ Breaking change for existing applications</div>
+                                            </div>
+                                            <div class="flex space-x-2 ml-4">
+                                                <select class="text-sm border rounded px-2 py-1" onchange="resolveConflict('SP_ProcessOrder', this.value)">
+                                                    <option value="">Select Action</option>
+                                                    <option value="overload">Create Overload</option>
+                                                    <option value="replace">Replace Original</option>
+                                                    <option value="version">Version Both</option>
+                                                </select>
+                                                <button class="erwin-button px-2 py-1 text-xs" onclick="showConflictDetails('SP_ProcessOrder')">
+                                                    Details
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Medium Priority Conflicts -->
+                            <div class="border border-yellow-200 rounded-lg p-3 bg-yellow-50">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h5 class="font-semibold text-yellow-800">🟡 Medium Priority Conflicts (8)</h5>
+                                    <button class="text-sm text-yellow-600 hover:underline" onclick="expandConflictGroup('medium')">
+                                        Expand All
+                                    </button>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="conflict-item bg-white border rounded p-3">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <div class="font-medium">Domain: Money_Type</div>
+                                                <div class="text-sm text-gray-600">Precision changed from DECIMAL to DECIMAL(12,2)</div>
+                                                <div class="text-xs text-yellow-600 mt-1">ℹ️ Compatible change, data preserved</div>
+                                            </div>
+                                            <div class="flex space-x-2 ml-4">
+                                                <select class="text-sm border rounded px-2 py-1" onchange="resolveConflict('Money_Type', this.value)">
+                                                    <option value="use-right" selected>Use Enhanced (12,2)</option>
+                                                    <option value="use-left">Keep Generic</option>
+                                                    <option value="custom">Custom Precision</option>
+                                                </select>
+                                                <span class="text-xs text-green-600 self-center">✓ Auto-resolved</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="conflict-item bg-white border rounded p-3">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <div class="font-medium">Index: IDX_Order_Date</div>
+                                                <div class="text-sm text-gray-600">Changed from single to composite index (date, status)</div>
+                                                <div class="text-xs text-yellow-600 mt-1">ℹ️ Performance improvement, backward compatible</div>
+                                            </div>
+                                            <div class="flex space-x-2 ml-4">
+                                                <select class="text-sm border rounded px-2 py-1" onchange="resolveConflict('IDX_Order_Date', this.value)">
+                                                    <option value="use-right" selected>Use Composite</option>
+                                                    <option value="use-left">Keep Single</option>
+                                                    <option value="both">Create Both</option>
+                                                </select>
+                                                <span class="text-xs text-green-600 self-center">✓ Auto-resolved</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-center text-sm text-gray-500 py-2">
+                                        ... and 6 more medium priority conflicts
+                                        <button class="text-blue-600 hover:underline ml-2" onclick="showAllMediumConflicts()">Show All</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Low Priority / Auto-Resolved -->
+                            <div class="border border-green-200 rounded-lg p-3 bg-green-50">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h5 class="font-semibold text-green-800">🟢 Low Priority / Auto-Resolved (4)</h5>
+                                    <button class="text-sm text-green-600 hover:underline" onclick="expandConflictGroup('low')">
+                                        Show Details
+                                    </button>
+                                </div>
+                                <div class="text-sm text-green-700">
+                                    All low-priority conflicts have been automatically resolved using compatible merge strategies.
+                                    <button class="text-blue-600 hover:underline ml-2" onclick="showAutoResolutions()">View Details</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-between mt-6">
+                    <button class="erwin-button px-4 py-2" onclick="goToStep(3)">
+                        ← Previous
+                    </button>
+                    <div class="space-x-2">
+                        <button class="erwin-button px-4 py-2" onclick="validateResolutions()">
+                            Validate Resolutions
+                        </button>
+                        <button class="erwin-button primary px-4 py-2" onclick="goToStep(5)">
+                            Generate Scripts →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Generate Scripts -->
+            <div id="step5" class="p-6" style="display: none;">
+                <h3 class="text-lg font-semibold mb-4">Generate Scripts</h3>
+
+                <!-- Script Generation Summary -->
+                <div class="compare-stats mb-4">
+                    <h4 class="font-semibold mb-2">Script Generation Summary</h4>
+                    <div class="grid grid-cols-4 gap-4">
+                        <div class="stat-item">
+                            <span>Total Changes:</span>
+                            <span class="font-semibold">24</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>CREATE Scripts:</span>
+                            <span class="font-semibold text-blue-600">8</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>ALTER Scripts:</span>
+                            <span class="font-semibold text-orange-600">12</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>DROP Scripts:</span>
+                            <span class="font-semibold text-red-600">4</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Script Configuration -->
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <!-- Target Database -->
+                    <div class="erwin-panel p-4">
+                        <h4 class="font-semibold mb-3">Target Database</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Database Platform:</label>
+                                <select class="w-full p-2 border border-gray-300 rounded text-sm">
+                                    <option selected>Microsoft SQL Server 2019</option>
+                                    <option>Oracle Database 19c</option>
+                                    <option>PostgreSQL 13</option>
+                                    <option>MySQL 8.0</option>
+                                    <option>IBM DB2 11.5</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Schema/Database:</label>
+                                <input type="text" value="CustomerDB_Production" class="w-full p-2 border border-gray-300 rounded text-sm">
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="validateSyntax" checked class="mr-2">
+                                <label for="validateSyntax" class="text-sm">Validate SQL syntax</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Script Options -->
+                    <div class="erwin-panel p-4">
+                        <h4 class="font-semibold mb-3">Script Options</h4>
+                        <div class="space-y-3">
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2">
+                                    <span class="text-sm">Include DROP statements for removed objects</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2">
+                                    <span class="text-sm">Generate backup scripts before changes</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2">
+                                    <span class="text-sm">Include data migration scripts</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2">
+                                    <span class="text-sm">Add transaction wrappers</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2">
+                                    <span class="text-sm">Generate rollback scripts</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2">
+                                    <span class="text-sm">Include execution statistics</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Script Categories -->
+                <div class="erwin-panel mb-6">
+                    <div class="comparison-header">
+                        Generated Script Categories
+                    </div>
+                    <div class="p-4">
+                        <div class="grid grid-cols-3 gap-4">
+                            <!-- DDL Scripts -->
+                            <div class="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                                <h5 class="font-semibold text-blue-800 mb-3">📄 DDL Scripts (16)</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>CREATE TABLE Product</span>
+                                        <span class="text-blue-600">New</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>ALTER TABLE OrderItem</span>
+                                        <span class="text-orange-600">Modify</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>CREATE INDEX IDX_Product_Category</span>
+                                        <span class="text-blue-600">New</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>DROP TABLE TempOrder</span>
+                                        <span class="text-red-600">Remove</span>
+                                    </div>
+                                    <div class="text-center text-gray-500 py-1">
+                                        <button class="text-blue-600 hover:underline" onclick="showAllDDL()">... and 12 more</button>
+                                    </div>
+                                </div>
+                                <button class="w-full mt-3 erwin-button px-3 py-2" onclick="previewScript('ddl')">
+                                    Preview DDL
+                                </button>
+                            </div>
+
+                            <!-- DML Scripts -->
+                            <div class="border border-green-200 rounded-lg p-4 bg-green-50">
+                                <h5 class="font-semibold text-green-800 mb-3">🔄 DML Scripts (5)</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Migrate OrderItem.ProductID</span>
+                                        <span class="text-orange-600">Data</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Update Order.ShippingAddress</span>
+                                        <span class="text-orange-600">Data</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Populate Product catalog</span>
+                                        <span class="text-blue-600">Seed</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Archive TempOrder data</span>
+                                        <span class="text-yellow-600">Backup</span>
+                                    </div>
+                                    <div class="text-center text-gray-500 py-1">
+                                        <button class="text-blue-600 hover:underline" onclick="showAllDML()">... and 1 more</button>
+                                    </div>
+                                </div>
+                                <button class="w-full mt-3 erwin-button px-3 py-2" onclick="previewScript('dml')">
+                                    Preview DML
+                                </button>
+                            </div>
+
+                            <!-- Rollback Scripts -->
+                            <div class="border border-red-200 rounded-lg p-4 bg-red-50">
+                                <h5 class="font-semibold text-red-800 mb-3">↶ Rollback Scripts (3)</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Rollback_DDL_Changes.sql</span>
+                                        <span class="text-red-600">Safety</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Restore_TempOrder.sql</span>
+                                        <span class="text-yellow-600">Recovery</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Revert_Constraints.sql</span>
+                                        <span class="text-orange-600">Undo</span>
+                                    </div>
+                                </div>
+                                <button class="w-full mt-3 erwin-button px-3 py-2" onclick="previewScript('rollback')">
+                                    Preview Rollback
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Script Preview Area -->
+                <div class="erwin-panel mb-6">
+                    <div class="comparison-header">
+                        Script Preview
+                    </div>
+                    <div id="scriptPreview" class="p-4 bg-gray-50 font-mono text-sm" style="min-height: 200px;">
+                        <div class="text-center text-gray-500 py-8">
+                            <span class="material-symbols-outlined text-4xl mb-2 block">code</span>
+                            <p>Select a script category above to preview the generated SQL</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export and Execution Options -->
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <!-- Export Options -->
+                    <div class="erwin-panel p-4">
+                        <h4 class="font-semibold mb-3">Export Options</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Export Format:</label>
+                                <select class="w-full p-2 border border-gray-300 rounded text-sm">
+                                    <option selected>Individual SQL files</option>
+                                    <option>Single combined script</option>
+                                    <option>Deployment package (ZIP)</option>
+                                    <option>Database project</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Output Directory:</label>
+                                <div class="flex">
+                                    <input type="text" value="C:\Scripts\CustomerDB_Migration" class="flex-1 p-2 border border-gray-300 rounded-l text-sm">
+                                    <button class="erwin-button px-3 py-2 rounded-l-none">Browse</button>
+                                </div>
+                            </div>
+                            <div class="space-x-2">
+                                <button class="erwin-button px-4 py-2" onclick="exportScripts()">
+                                    Export Scripts
+                                </button>
+                                <button class="erwin-button px-4 py-2" onclick="generateReport()">
+                                    Generate Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Execution Options -->
+                    <div class="erwin-panel p-4">
+                        <h4 class="font-semibold mb-3">Execution Options</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Execution Mode:</label>
+                                <select class="w-full p-2 border border-gray-300 rounded text-sm">
+                                    <option selected>Manual execution (recommended)</option>
+                                    <option>Automatic execution</option>
+                                    <option>Scheduled execution</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2">
+                                    <span class="text-sm">Test execution on copy database first</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2">
+                                    <span class="text-sm">Create database backup before execution</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2">
+                                    <span class="text-sm">Stop on first error</span>
+                                </label>
+                            </div>
+                            <div class="space-x-2">
+                                <button class="erwin-button primary px-4 py-2" onclick="executeScripts()">
+                                    Execute Scripts
+                                </button>
+                                <button class="erwin-button px-4 py-2" onclick="scheduleExecution()">
+                                    Schedule
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-between mt-6">
+                    <button class="erwin-button px-4 py-2" onclick="goToStep(4)">
+                        ← Previous
+                    </button>
+                    <div class="space-x-2">
+                        <button class="erwin-button px-4 py-2" onclick="saveConfiguration()">
+                            Save Configuration
+                        </button>
+                        <button class="erwin-button primary px-4 py-2" onclick="completeWizard()">
+                            Complete Wizard
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 2;
+        let selectedObject = null;
+
+        // Sample object data for demonstration
+        const objectData = {
+            'Customer': {
+                left: { columns: 4, type: 'table', status: 'same' },
+                right: { columns: 4, type: 'table', status: 'same' }
+            },
+            'Order': {
+                left: { columns: 5, type: 'table', status: 'different' },
+                right: { columns: 6, type: 'table', status: 'different' }
+            },
+            'OrderItem': {
+                left: { columns: 4, type: 'table', status: 'different' },
+                right: { columns: 5, type: 'table', status: 'different' }
+            },
+            'TempOrder': {
+                left: { columns: 3, type: 'table', status: 'missing-right' },
+                right: null
+            },
+            'Product': {
+                left: null,
+                right: { columns: 5, type: 'table', status: 'missing-left' }
+            }
+        };
+
+        function goToStep(step) {
+            // Hide all steps
+            for (let i = 1; i <= 5; i++) {
+                const stepElement = document.getElementById(`step${i}`);
+                if (stepElement) {
+                    stepElement.style.display = 'none';
+                }
+            }
+
+            // Show target step
+            const targetStep = document.getElementById(`step${step}`);
+            if (targetStep) {
+                targetStep.style.display = 'block';
+            }
+
+            // Update wizard step indicators
+            document.querySelectorAll('.wizard-step').forEach((el, index) => {
+                el.classList.remove('active', 'completed');
+                if (index + 1 < step) {
+                    el.classList.add('completed');
+                } else if (index + 1 === step) {
+                    el.classList.add('active');
+                }
+            });
+
+            currentStep = step;
+        }
+
+        function startComparison() {
+            // Simulate comparison process
+            setTimeout(() => {
+                goToStep(3);
+            }, 1000);
+        }
+
+        function selectObject(objectName) {
+            selectedObject = objectName;
+
+            // Clear previous selections
+            document.querySelectorAll('.tree-node').forEach(node => {
+                node.classList.remove('selected');
+            });
+
+            // Highlight selected objects
+            document.querySelectorAll(`.tree-node`).forEach(node => {
+                if (node.textContent.includes(objectName)) {
+                    node.classList.add('selected');
+                }
+            });
+
+            // Update object details
+            updateObjectDetails(objectName);
+        }
+
+        function updateObjectDetails(objectName) {
+            const details = document.getElementById('objectDetails');
+            const data = objectData[objectName];
+
+            if (!data) {
+                details.innerHTML = `
+                    <div class="text-center p-4">
+                        <h4 class="font-semibold">${objectName}</h4>
+                        <p class="text-sm text-gray-600">No detailed comparison data available</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let content = `
+                <div class="p-4">
+                    <h4 class="font-semibold mb-3">${objectName}</h4>
+            `;
+
+            if (data.left && data.right) {
+                // Both sides exist - show differences
+                content += `
+                    <div class="bg-yellow-50 border border-yellow-200 rounded p-3 mb-3">
+                        <h5 class="font-medium text-yellow-800 mb-2">Differences Found</h5>
+                        <div class="text-sm space-y-1">
+                            <div>Left: ${data.left.columns} columns</div>
+                            <div>Right: ${data.right.columns} columns</div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <button onclick="resolveObject('${objectName}', 'left')" class="w-full erwin-button action-use-left p-2">
+                            Use Left Model
+                        </button>
+                        <button onclick="resolveObject('${objectName}', 'right')" class="w-full erwin-button action-use-right p-2">
+                            Use Right Model
+                        </button>
+                        <button onclick="mergeObject('${objectName}')" class="w-full erwin-button action-merge p-2">
+                            Custom Merge
+                        </button>
+                    </div>
+                `;
+            } else if (data.left && !data.right) {
+                // Only in left model
+                content += `
+                    <div class="bg-red-50 border border-red-200 rounded p-3 mb-3">
+                        <h5 class="font-medium text-red-800 mb-2">Missing in Right Model</h5>
+                        <div class="text-sm">
+                            Object exists only in left model (${data.left.columns} columns)
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <button onclick="resolveObject('${objectName}', 'keep')" class="w-full erwin-button action-use-left p-2">
+                            Keep in Merge
+                        </button>
+                        <button onclick="resolveObject('${objectName}', 'remove')" class="w-full erwin-button p-2">
+                            Remove from Merge
+                        </button>
+                    </div>
+                `;
+            } else if (!data.left && data.right) {
+                // Only in right model
+                content += `
+                    <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-3">
+                        <h5 class="font-medium text-blue-800 mb-2">New in Right Model</h5>
+                        <div class="text-sm">
+                            Object exists only in right model (${data.right.columns} columns)
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <button onclick="resolveObject('${objectName}', 'add')" class="w-full erwin-button action-use-right p-2">
+                            Add to Merge
+                        </button>
+                        <button onclick="resolveObject('${objectName}', 'ignore')" class="w-full erwin-button p-2">
+                            Ignore
+                        </button>
+                    </div>
+                `;
+            }
+
+            content += '</div>';
+            details.innerHTML = content;
+        }
+
+        function resolveObject(objectName, action) {
+            alert(`Resolved ${objectName} with action: ${action}`);
+
+            // Update visual state
+            document.querySelectorAll(`.tree-node`).forEach(node => {
+                if (node.textContent.includes(objectName)) {
+                    node.classList.remove('status-different', 'status-missing-left', 'status-missing-right');
+                    node.classList.add('status-same');
+
+                    // Update icon
+                    const icon = node.querySelector('.tree-icon');
+                    if (icon) {
+                        icon.textContent = '🔵';
+                    }
+                }
+            });
+        }
+
+        function mergeObject(objectName) {
+            alert(`Opening custom merge editor for ${objectName}`);
+        }
+
+        function autoResolve() {
+            alert('Auto-resolving compatible differences...');
+        }
+
+        function closeWizard() {
+            if (confirm('Are you sure you want to close the Complete Compare wizard?')) {
+                window.location.href = 'modeler.html';
+            }
+        }
+
+        // Step 4: Resolve Differences Functions
+        function autoResolveStrategy(strategy) {
+            alert(`Applying ${strategy} strategy to compatible conflicts...`);
+            // Update resolution progress
+            updateResolutionProgress(75);
+        }
+
+        function resolveConflict(objectName, action) {
+            alert(`Resolved ${objectName} with action: ${action}`);
+            // Update visual state and progress
+            updateResolutionProgress(60);
+        }
+
+        function showConflictDetails(objectName) {
+            alert(`Showing detailed conflict analysis for ${objectName}`);
+        }
+
+        function expandConflictGroup(priority) {
+            alert(`Expanding all ${priority} priority conflicts`);
+        }
+
+        function showAllMediumConflicts() {
+            alert('Showing all medium priority conflicts');
+        }
+
+        function showAutoResolutions() {
+            alert('Showing details of auto-resolved conflicts');
+        }
+
+        function exportResolutions(format) {
+            alert(`Exporting resolutions in ${format} format`);
+        }
+
+        function saveResolutionProfile() {
+            alert('Saving resolution profile for future use');
+        }
+
+        function validateResolutions() {
+            alert('Validating all resolutions for consistency and integrity');
+        }
+
+        function updateResolutionProgress(percentage) {
+            const progressBar = document.querySelector('.bg-green-600');
+            if (progressBar) {
+                progressBar.style.width = percentage + '%';
+            }
+        }
+
+        // Step 5: Generate Scripts Functions
+        function previewScript(type) {
+            const preview = document.getElementById('scriptPreview');
+            let content = '';
+
+            switch(type) {
+                case 'ddl':
+                    content = `-- DDL Script Preview
+-- Generated by Erwin Complete Compare
+
+-- Create new Product table
+CREATE TABLE Product (
+    ProductID INT IDENTITY(1,1) PRIMARY KEY,
+    Name NVARCHAR(255) NOT NULL,
+    Category NVARCHAR(100),
+    Price DECIMAL(10,2) CHECK (Price >= 0),
+    StockQuantity INT CHECK (StockQuantity >= 0)
+);
+
+-- Alter OrderItem table to add ProductID
+ALTER TABLE OrderItem
+ADD ProductID INT;
+
+-- Add foreign key constraint
+ALTER TABLE OrderItem
+ADD CONSTRAINT FK_OrderItem_Product
+FOREIGN KEY (ProductID) REFERENCES Product(ProductID);
+
+-- Create Product category index
+CREATE INDEX IDX_Product_Category
+ON Product (Category);
+
+-- Drop temporary table
+DROP TABLE TempOrder;
+
+-- ... and 12 more DDL statements`;
+                    break;
+                case 'dml':
+                    content = `-- DML Script Preview
+-- Data Migration and Updates
+
+-- Archive TempOrder data before dropping
+INSERT INTO OrderArchive (OrderID, CustomerID, OrderDate, Status)
+SELECT OrderID, CustomerID, OrderDate, 'TEMP_ARCHIVED'
+FROM TempOrder;
+
+-- Update existing OrderItem records with default ProductID
+UPDATE OrderItem
+SET ProductID = 1 -- Default product for existing items
+WHERE ProductID IS NULL;
+
+-- Populate Product catalog with sample data
+INSERT INTO Product (Name, Category, Price, StockQuantity) VALUES
+('Sample Product 1', 'Electronics', 99.99, 100),
+('Sample Product 2', 'Books', 24.99, 50),
+('Sample Product 3', 'Clothing', 39.99, 75);
+
+-- Update Order table with shipping addresses
+UPDATE [Order]
+SET ShippingAddress = CustomerAddress
+FROM Customer
+WHERE [Order].CustomerID = Customer.CustomerID
+AND ShippingAddress IS NULL;`;
+                    break;
+                case 'rollback':
+                    content = `-- Rollback Script Preview
+-- Revert all changes if needed
+
+-- Restore TempOrder table
+CREATE TABLE TempOrder (
+    TempOrderID INT IDENTITY(1,1) PRIMARY KEY,
+    CustomerID INT,
+    OrderDate DATETIME,
+    Status NVARCHAR(50)
+);
+
+-- Restore archived data
+INSERT INTO TempOrder (CustomerID, OrderDate, Status)
+SELECT CustomerID, OrderDate, 'RESTORED'
+FROM OrderArchive
+WHERE Status = 'TEMP_ARCHIVED';
+
+-- Remove ProductID column from OrderItem
+ALTER TABLE OrderItem
+DROP CONSTRAINT FK_OrderItem_Product;
+
+ALTER TABLE OrderItem
+DROP COLUMN ProductID;
+
+-- Drop Product table
+DROP TABLE Product;
+
+-- Revert constraints and indexes
+DROP INDEX IDX_Product_Category;`;
+                    break;
+                default:
+                    content = 'No preview available for this script type.';
+            }
+
+            preview.innerHTML = `<pre class="whitespace-pre-wrap">${content}</pre>`;
+        }
+
+        function showAllDDL() {
+            alert('Showing all 16 DDL statements');
+        }
+
+        function showAllDML() {
+            alert('Showing all 5 DML statements');
+        }
+
+        function exportScripts() {
+            alert('Exporting scripts to selected directory');
+        }
+
+        function generateReport() {
+            alert('Generating comprehensive migration report');
+        }
+
+        function executeScripts() {
+            if (confirm('Are you sure you want to execute the migration scripts? This will modify the target database.')) {
+                alert('Executing scripts... (This would normally connect to the database)');
+            }
+        }
+
+        function scheduleExecution() {
+            alert('Opening script execution scheduler');
+        }
+
+        function saveConfiguration() {
+            alert('Saving script generation configuration');
+        }
+
+        function completeWizard() {
+            if (confirm('Complete Compare wizard finished successfully. Return to main modeler?')) {
+                window.location.href = 'modeler.html';
+            }
+        }
+
+        // Toggle group expansion
+        function toggleGroup(groupId) {
+            const group = document.getElementById(groupId);
+            const icon = event.target.closest('.tree-group-header').querySelector('.expand-icon');
+
+            if (group) {
+                group.classList.toggle('collapsed');
+                icon.classList.toggle('expanded');
+            }
+        }
+
+        // Initialize wizard on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            goToStep(2); // Start at options step
+
+            // Initialize some groups as expanded
+            const expandedGroups = ['leftPhysical', 'leftTables', 'rightPhysical', 'rightTables'];
+            expandedGroups.forEach(groupId => {
+                const group = document.getElementById(groupId);
+                if (group) {
+                    group.classList.remove('collapsed');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
