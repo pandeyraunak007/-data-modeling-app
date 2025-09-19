@@ -15,7 +15,19 @@
       "WebFetch(domain:ssbitutorials.wordpress.com)",
       "Bash(start erwin-compare.html)",
       "Bash(start \"C:\\Users\\pande\\OneDrive\\Documents\\Raunak\\forGit\\data-modeling-app\\modeler_compare.html\")",
-      "Bash(start \"C:\\Users\\pande\\OneDrive\\Documents\\Raunak\\forGit\\data-modeling-app\\modeler_compare_clean.html\")"
+      "Bash(start \"C:\\Users\\pande\\OneDrive\\Documents\\Raunak\\forGit\\data-modeling-app\\modeler_compare_clean.html\")",
+      "Bash(npx create-react-app:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(where node)",
+      "Bash(findstr:*)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(npx create-next-app:*)",
+      "Bash(git remote remove:*)",
+      "Bash(gh repo create:*)"
     ],
     "deny": [],
     "ask": []
